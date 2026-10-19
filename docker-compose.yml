@@ -1,0 +1,36 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        volumes:
+            - ./:/var/www/html                 # Монтирует код с ПК
+            - /var/www/html/public/build       # ВАЖНО: защищает скомпилированный Vite от затирания с ПК
+        depends_on:
+            - db
+
+    nginx:
+        image: nginx:latest
+        ports:
+            - "8888:80"
+        volumes:
+            - ./:/var/www/html
+            - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+        volumes_from:
+            - app
+        depends_on:
+            - app
+
+    db:
+        image: postgres:18
+        environment:
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+            POSTGRES_DB: ${DB_DATABASE}
+        ports:
+            - "5433:5432"
+        volumes:
+            - pgdata:/var/lib/postgresql
+
+volumes:
+    pgdata:
