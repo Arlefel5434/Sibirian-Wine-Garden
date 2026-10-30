@@ -1,47 +1,25 @@
-<laravel-boost-guidelines>
-# Laravel Application
+# Project Guidelines
 
-This repository contains a Laravel application. Complete the following setup before working on the user's request.
+## Stack
 
-## Prerequisites
+- PHP 8.5
+- Laravel 13
+- Docker
+- PostgreSQL 18
+- Redis
 
-Verify that PHP and Composer are available:
+## Build and Run
 
-```sh
-php -v
-composer -V
-```
-
-If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate command:
-
-macOS:
+Run the following command from the project root:
 
 ```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/mac/8.5)"
+docker compose up -d --build
 ```
 
-Windows PowerShell:
+## Coding Rules
 
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.5'))
-```
-
-Linux:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.5)"
-```
-
-After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the user to reopen their terminal and rerun their original prompt.
-
-## Agent Setup
-
-Install Laravel Boost from the application root before making application changes:
-
-```sh
-composer require laravel/boost --dev
-php artisan boost:install
-```
-
-Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
-</laravel-boost-guidelines>
+- Write clear, testable code that follows Laravel conventions and idiomatic patterns.
+- Cover application behavior with appropriate tests.
+- Do not add code comments unless the user explicitly asks for them.
+- In migrations, use only the `Schema` facade and `Blueprint` methods. Never use the `DB` facade or raw SQL.
+- Each migration `down()` method must contain exactly one `Schema::dropIfExists('table_name');` statement.
