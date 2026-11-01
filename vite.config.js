@@ -1,10 +1,17 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
     plugins: [
+        react(),
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            input: [
+                'resources/css/app.css',
+                'resources/css/auth.css',
+                'resources/js/app.js',
+                'resources/js/auth.jsx',
+            ],
             refresh: true,
         }),
     ],
@@ -13,7 +20,7 @@ export default defineConfig({
         port: 5173,
         hmr: {
             host: 'localhost',
-            clientPort: 5180, // Порт Docker
+            clientPort: 5180,
         },
     },
 });

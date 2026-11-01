@@ -21,6 +21,16 @@ services:
         depends_on:
             - app
 
+    frontend:
+        image: node:24-alpine
+        working_dir: /var/www/html
+        command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+        ports:
+            - "5180:5173"
+        volumes:
+            - ./:/var/www/html
+            - node_modules:/var/www/html/node_modules
+
     db:
         image: postgres:18
         environment:
@@ -34,3 +44,4 @@ services:
 
 volumes:
     pgdata:
+    node_modules:
