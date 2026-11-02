@@ -18,12 +18,17 @@ class PostController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        Gate::authorize('viewAny', Post::class);
+        $user = $request->user('api');
+        Gate::forUser($user)->authorize('viewAny', Post::class);
 
-        $user = $request->user();
         $posts = Post::query()
             ->with('author.profile')
-            ->when(! $user->isAdmin(), fn ($query) => $query->whereBelongsTo($user, 'author'))
+            ->when(! $user?->isAdmin(), function ($query) use ($user) {
+                $query->where(function ($query) use ($user) {
+                    $query->where('status', 'published')
+                        ->when($user, fn ($query) => $query->orWhereBelongsTo($user, 'author'));
+                });
+            })
             ->latest()
             ->paginate(9);
 
@@ -39,9 +44,10 @@ class PostController extends Controller
             ->setStatusCode(Response::HTTP_CREATED);
     }
 
-    public function show(Post $post): PostResource
+    public function show(Request $request, Post $post): PostResource
     {
-        Gate::authorize('view', $post);
+        $user = $request->user('api');
+        Gate::forUser($user)->authorize('view', $post);
 
         return PostResource::make($post->load('author.profile'));
     }

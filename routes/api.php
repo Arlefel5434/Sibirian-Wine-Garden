@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProductOptionsController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -17,7 +18,13 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+Route::name('api.')->group(function () {
+    Route::apiResource('posts', PostController::class)->only(['index', 'show']);
+    Route::apiResource('products', ProductController::class)->only(['index', 'show']);
+});
+
 Route::middleware('auth:api')->name('api.')->group(function () {
-    Route::apiResource('posts', PostController::class);
-    Route::apiResource('products', ProductController::class);
+    Route::apiResource('posts', PostController::class)->except(['index', 'show']);
+    Route::get('product-options', ProductOptionsController::class)->name('product-options');
+    Route::apiResource('products', ProductController::class)->except(['index', 'show']);
 });

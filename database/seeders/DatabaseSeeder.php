@@ -31,5 +31,6 @@ class DatabaseSeeder extends Seeder
             ->has(Post::factory()->count(3))
             ->create();
 
+        $this->call(ProductCatalogSeeder::class);
     }
 }

@@ -22,14 +22,26 @@ function tokenFor(User $user): string
     return auth('api')->login($user);
 }
 
-test('post resource routes require authentication', function () {
-    $post = Post::factory()->create();
+test('post write routes require authentication', function () {
+    $post = Post::factory()->create(['status' => 'draft']);
 
-    $this->getJson('/api/posts')->assertUnauthorized();
     $this->postJson('/api/posts', postPayload())->assertUnauthorized();
-    $this->getJson("/api/posts/{$post->id}")->assertUnauthorized();
     $this->putJson("/api/posts/{$post->id}", postPayload())->assertUnauthorized();
     $this->deleteJson("/api/posts/{$post->id}")->assertUnauthorized();
+});
+
+test('guests can read published posts but not drafts', function () {
+    $published = Post::factory()->create(['status' => 'published']);
+    $draft = Post::factory()->create(['status' => 'draft']);
+
+    $this
+        ->getJson('/api/posts')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $published->id);
+
+    $this->getJson("/api/posts/{$published->id}")->assertOk();
+    $this->getJson("/api/posts/{$draft->id}")->assertForbidden();
 });
 
 test('authenticated users can create posts assigned to themselves', function () {
@@ -72,26 +84,28 @@ test('post creation validates content', function () {
         ->assertJsonValidationErrors(['title', 'preview_img', 'status', 'body']);
 });
 
-test('users see only their posts while administrators see every post', function () {
+test('users see published posts and their drafts while administrators see every post', function () {
     $author = User::factory()->create();
     $otherUser = User::factory()->create();
     $admin = User::factory()->create();
     $admin->profile->forceFill(['role' => 'admin'])->save();
-    $ownPost = Post::factory()->for($author, 'author')->create();
-    $otherPost = Post::factory()->for($otherUser, 'author')->create();
+    $ownPost = Post::factory()->for($author, 'author')->create(['status' => 'draft']);
+    $otherPost = Post::factory()->for($otherUser, 'author')->create(['status' => 'draft']);
+    $publishedPost = Post::factory()->for($otherUser, 'author')->create(['status' => 'published']);
 
     $this
         ->withToken(tokenFor($author))
         ->getJson('/api/posts')
         ->assertOk()
-        ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.id', $ownPost->id);
+        ->assertJsonCount(2, 'data')
+        ->assertJsonFragment(['id' => $ownPost->id])
+        ->assertJsonFragment(['id' => $publishedPost->id]);
 
     $this
         ->withToken(tokenFor($admin))
         ->getJson('/api/posts')
         ->assertOk()
-        ->assertJsonCount(2, 'data')
+        ->assertJsonCount(3, 'data')
         ->assertJsonFragment(['id' => $otherPost->id]);
 });
 
@@ -118,7 +132,7 @@ test('post authors can view and update their posts', function () {
 
 test('users cannot view update or delete posts belonging to another user', function () {
     $user = User::factory()->create();
-    $post = Post::factory()->create();
+    $post = Post::factory()->create(['status' => 'draft']);
     $token = tokenFor($user);
 
     $this->withToken($token)->getJson("/api/posts/{$post->id}")->assertForbidden();

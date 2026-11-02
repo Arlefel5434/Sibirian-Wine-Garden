@@ -9,7 +9,7 @@ function bodyText(body) {
         .join('\n\n');
 }
 
-export function PostCard({ post, onEdit, onDelete }) {
+export function PostCard({ post, canManage, onEdit, onDelete }) {
     return (
         <article className="post-card">
             <div className="card-image">
@@ -22,8 +22,10 @@ export function PostCard({ post, onEdit, onDelete }) {
                 <p>{post.preview_text || bodyText(post.body).slice(0, 150) || 'No introduction yet.'}</p>
                 <div className="card-actions">
                     <a href={`/posts/${post.slug}`}>Open</a>
-                    <button type="button" onClick={() => onEdit(post)}>Edit</button>
-                    <button type="button" className="delete-button" onClick={() => onDelete(post)}>Delete</button>
+                    {canManage && <>
+                        <button type="button" onClick={() => onEdit(post)}>Edit</button>
+                        <button type="button" className="delete-button" onClick={() => onDelete(post)}>Delete</button>
+                    </>}
                 </div>
             </div>
         </article>
