@@ -9,8 +9,12 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/css/auth.css',
+                'resources/css/blog.css',
+                'resources/css/post.css',
                 'resources/js/app.js',
-                'resources/js/auth.jsx',
+                'resources/client/views/auth/LoginView.jsx',
+                'resources/client/views/admin/BlogStudioView.jsx',
+                'resources/client/views/posts/PostView.jsx',
             ],
             refresh: true,
         }),

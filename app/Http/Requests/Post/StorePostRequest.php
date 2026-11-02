@@ -1,0 +1,28 @@
+<?php
+
+namespace App\Http\Requests\Post;
+
+use App\Models\Post;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class StorePostRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()?->can('create', Post::class) === true;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'title' => ['required', 'string', 'max:255'],
+            'preview_img' => ['nullable', 'url:http,https', 'max:2048'],
+            'preview_text' => ['nullable', 'string', 'max:500'],
+            'status' => ['required', Rule::in(['draft', 'published', 'archived'])],
+            'body' => ['required', 'array', 'min:1'],
+            'body.*.type' => ['required', 'string', Rule::in(['heading', 'paragraph', 'image'])],
+            'body.*.data' => ['required', 'array'],
+        ];
+    }
+}

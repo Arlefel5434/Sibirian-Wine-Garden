@@ -1,70 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrandMark } from '../../components/common';
+import '../../styles/common.css';
+import { apiRequest, clearAccessToken, refreshSession, setAccessToken } from '../../lib/api';
 
-let accessToken = null;
-
-async function request(path, options = {}, retry = true) {
-    const response = await fetch(path, {
-        ...options,
-        credentials: 'same-origin',
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-            ...options.headers,
-        },
-    });
-    const payload = await response.json().catch(() => ({}));
-
-    if (response.status === 401 && retry && !path.endsWith('/login') && !path.endsWith('/refresh')) {
-        await refreshSession();
-
-        return request(path, options, false);
-    }
-
-    if (!response.ok) {
-        throw new Error(payload.message || 'Something went wrong. Please try again.');
-    }
-
-    return payload;
-}
-
-async function refreshSession() {
-    const response = await fetch('/api/auth/refresh', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-        },
-    });
-    const payload = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-        accessToken = null;
-        throw new Error(payload.message || 'Your session has expired. Please sign in again.');
-    }
-
-    accessToken = payload.access_token;
-
-    return payload;
-}
-
-function VineyardMark() {
-    return (
-        <svg viewBox="0 0 64 64" aria-hidden="true" className="brand-mark">
-            <path d="M31.7 12.4c5.1-7.2 13-7.4 18-5.8-1.2 7.2-6.9 12.7-15.6 12.5" />
-            <path d="M31.8 15.2c-1.6 7.1-.6 11.9 1.7 16.3" />
-            <circle cx="24" cy="29" r="7" />
-            <circle cx="37" cy="29" r="7" />
-            <circle cx="18" cy="40" r="7" />
-            <circle cx="31" cy="41" r="7" />
-            <circle cx="43" cy="40" r="7" />
-            <circle cx="25" cy="52" r="7" />
-            <circle cx="38" cy="51" r="7" />
-        </svg>
-    );
-}
+const requestedRedirect = new URLSearchParams(window.location.search).get('redirect');
+const redirectTo = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
+    ? requestedRedirect
+    : null;
 
 function EyeIcon({ open }) {
     return open ? (
@@ -78,7 +21,7 @@ function SignedIn({ user, onLogout }) {
     return (
         <main className="auth-shell">
             <section className="welcome-card" aria-labelledby="welcome-title">
-                <div className="signed-in-mark"><VineyardMark /></div>
+                <div className="signed-in-mark"><BrandMark className="brand-mark" /></div>
                 <p className="eyebrow">Cellar access granted</p>
                 <h1 id="welcome-title">Welcome back, {user.name}.</h1>
                 <p className="welcome-copy">Your account is authenticated with a short-lived JWT access token.</p>
@@ -87,7 +30,7 @@ function SignedIn({ user, onLogout }) {
                     <div><dt>Role</dt><dd>{user.role || 'customer'}</dd></div>
                 </dl>
                 <div className="welcome-actions">
-                    <a href="/" className="primary-link">Enter the garden</a>
+                    <a href="/posts" className="primary-link">Manage journal</a>
                     <button type="button" className="text-button" onClick={onLogout}>Sign out</button>
                 </div>
             </section>
@@ -108,6 +51,11 @@ function LoginPage() {
     useEffect(() => {
         refreshSession()
             .then((payload) => {
+                if (redirectTo) {
+                    window.location.assign(redirectTo);
+                    return;
+                }
+
                 setUser(payload.user);
                 setAuthenticated(true);
             })
@@ -121,13 +69,17 @@ function LoginPage() {
         setError('');
 
         try {
-            const payload = await request('/api/auth/login', {
+            const payload = await apiRequest('/api/auth/login', {
                 method: 'POST',
                 body: JSON.stringify({ email, password }),
             });
-            accessToken = payload.access_token;
+            setAccessToken(payload.access_token);
             setAuthenticated(true);
             setUser(payload.user);
+
+            if (redirectTo) {
+                window.location.assign(redirectTo);
+            }
         } catch (loginError) {
             setError(loginError.message);
         } finally {
@@ -137,11 +89,11 @@ function LoginPage() {
 
     async function handleLogout() {
         try {
-            await request('/api/auth/logout', {
+            await apiRequest('/api/auth/logout', {
                 method: 'POST',
             }, false);
         } finally {
-            accessToken = null;
+            clearAccessToken();
             setAuthenticated(false);
             setUser(null);
             setPassword('');
@@ -159,7 +111,7 @@ function LoginPage() {
     return (
         <main className="auth-shell">
             <section className="story-panel" aria-label="Siberian Wine Garden">
-                <div className="brand-lockup"><VineyardMark /><span>Siberian<br />Wine Garden</span></div>
+                <div className="brand-lockup"><BrandMark className="brand-mark" /><span>Siberian<br />Wine Garden</span></div>
                 <div className="story-copy">
                     <p className="eyebrow">From northern soil</p>
                     <h1>A private path into the garden.</h1>
@@ -170,7 +122,7 @@ function LoginPage() {
 
             <section className="form-panel" aria-labelledby="login-title">
                 <div className="form-wrap">
-                    <a href="/" className="mobile-brand" aria-label="Siberian Wine Garden home"><VineyardMark /></a>
+                    <a href="/" className="mobile-brand" aria-label="Siberian Wine Garden home"><BrandMark className="brand-mark" /></a>
                     <p className="eyebrow">Members' cellar</p>
                     <h2 id="login-title">Welcome back</h2>
                     <p className="form-intro">Sign in to continue to your account.</p>
