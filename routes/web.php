@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\PostController;
+use App\Models\Post;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
@@ -17,4 +17,8 @@ Route::view('profile', 'profile')
 
 require __DIR__.'/auth.php';
 
-Route::resource('posts', PostController::class)->only(['index', 'show']);
+Route::view('posts', 'blog.manage')->name('posts.index');
+
+Route::get('posts/{post:slug}', function (Post $post) {
+    return view('blog.show', ['post' => $post]);
+})->name('posts.show');

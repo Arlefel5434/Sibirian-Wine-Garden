@@ -6,7 +6,7 @@
         <meta name="theme-color" content="#211016">
         <title>Sign in · Siberian Wine Garden</title>
         @viteReactRefresh
-        @vite(['resources/css/auth.css', 'resources/js/auth.jsx'])
+        @vite(['resources/css/auth.css', 'resources/client/views/auth/LoginView.jsx'])
     </head>
     <body>
         <div id="auth-root"></div>
