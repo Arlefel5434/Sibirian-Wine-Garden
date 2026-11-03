@@ -41,14 +41,26 @@ function productPayload(Category $category, Attribute $attribute, array $overrid
     ];
 }
 
-test('product resource routes require authentication', function () {
+test('product write routes require authentication', function () {
     $product = Product::factory()->create();
 
-    $this->getJson('/api/products')->assertUnauthorized();
-    $this->getJson("/api/products/{$product->id}")->assertUnauthorized();
     $this->postJson('/api/products', [])->assertUnauthorized();
     $this->putJson("/api/products/{$product->id}", [])->assertUnauthorized();
     $this->deleteJson("/api/products/{$product->id}")->assertUnauthorized();
+});
+
+test('guests can read active products but not inactive products', function () {
+    $active = Product::factory()->create(['status' => 'active']);
+    $draft = Product::factory()->create(['status' => 'draft']);
+
+    $this
+        ->getJson('/api/products')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $active->id);
+
+    $this->getJson("/api/products/{$active->id}")->assertOk();
+    $this->getJson("/api/products/{$draft->id}")->assertForbidden();
 });
 
 test('only administrators can create products', function () {
@@ -60,6 +72,24 @@ test('only administrators can create products', function () {
         ->withToken(productToken($customer))
         ->postJson('/api/products', productPayload($category, $attribute))
         ->assertForbidden();
+});
+
+test('only administrators can retrieve product form options', function () {
+    $category = Category::query()->create(['name' => 'Wine', 'slug' => 'wine']);
+    $attribute = Attribute::query()->create(['name' => 'Alcohol', 'type' => 'decimal', 'unit' => '%']);
+    $customer = User::factory()->create();
+
+    $this
+        ->withToken(productToken($customer))
+        ->getJson('/api/product-options')
+        ->assertForbidden();
+
+    $this
+        ->withToken(productToken(productAdmin()))
+        ->getJson('/api/product-options')
+        ->assertOk()
+        ->assertJsonPath('categories.0.id', $category->id)
+        ->assertJsonPath('attributes.0.id', $attribute->id);
 });
 
 test('administrators can create products with skus and attributes', function () {
@@ -206,4 +236,28 @@ test('administrators can delete products and their dependent data', function () 
 
     $this->assertDatabaseMissing('products', ['id' => $product->id]);
     $this->assertDatabaseMissing('skus', ['id' => $sku->id]);
+});
+
+test('product page can be opened by slug', function () {
+    $product = Product::factory()->create();
+
+    $this
+        ->withoutVite()
+        ->get("/products/{$product->slug}")
+        ->assertOk()
+        ->assertSee($product->name)
+        ->assertSee('data-product-id="'.$product->id.'"', false);
+});
+
+test('unknown product slugs return not found', function () {
+    $this->get('/products/missing-product')->assertNotFound();
+});
+
+test('catalog seeding creates product form options and a demonstration product', function () {
+    $this->seed();
+
+    $this->assertDatabaseHas('categories', ['slug' => 'wine']);
+    $this->assertDatabaseHas('attributes', ['name' => 'Alcohol content']);
+    $this->assertDatabaseHas('products', ['slug' => 'northern-ice-wine', 'status' => 'active']);
+    $this->assertDatabaseHas('skus', ['sku' => 'ICE-WINE-375', 'price' => 3499]);
 });

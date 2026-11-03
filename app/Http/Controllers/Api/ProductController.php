@@ -18,11 +18,12 @@ class ProductController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        Gate::authorize('viewAny', Product::class);
+        $user = $request->user('api');
+        Gate::forUser($user)->authorize('viewAny', Product::class);
 
         $products = Product::query()
             ->with(['category', 'skus', 'attributeValues.attribute'])
-            ->when(! $request->user()->isAdmin(), fn ($query) => $query->where('status', 'active'))
+            ->when(! $user?->isAdmin(), fn ($query) => $query->where('status', 'active'))
             ->latest()
             ->paginate(15);
 
@@ -38,9 +39,10 @@ class ProductController extends Controller
             ->setStatusCode(Response::HTTP_CREATED);
     }
 
-    public function show(Product $product): ProductResource
+    public function show(Request $request, Product $product): ProductResource
     {
-        Gate::authorize('view', $product);
+        $user = $request->user('api');
+        Gate::forUser($user)->authorize('view', $product);
 
         return ProductResource::make($this->loadRelations($product));
     }

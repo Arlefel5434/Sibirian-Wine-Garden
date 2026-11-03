@@ -7,14 +7,16 @@ use App\Models\User;
 
 class PostPolicy
 {
-    public function viewAny(User $user): bool
+    public function viewAny(?User $user): bool
     {
         return true;
     }
 
-    public function view(User $user, Post $post): bool
+    public function view(?User $user, Post $post): bool
     {
-        return $user->isAdmin() || $post->user_id === $user->id;
+        return $post->status === 'published'
+            || $user?->isAdmin()
+            || $post->user_id === $user?->id;
     }
 
     public function create(User $user): bool

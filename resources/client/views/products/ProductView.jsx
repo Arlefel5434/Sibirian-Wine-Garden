@@ -1,0 +1,46 @@
+import React, { useEffect, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrandMark, PageLoader, StatusBadge } from '../../components/common';
+import { apiRequest, refreshSession } from '../../lib/api';
+import '../../styles/common.css';
+
+function price(sku) {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: sku.currency }).format(sku.price / 100);
+}
+
+function ProductView({ productId }) {
+    const [product, setProduct] = useState(null);
+    const [user, setUser] = useState(null);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        refreshSession()
+            .catch(() => null)
+            .then((session) => {
+                setUser(session?.user || null);
+                return apiRequest(`/api/products/${productId}`);
+            })
+            .then((payload) => setProduct(payload.data))
+            .catch((requestError) => {
+                if (requestError.status === 403) return setError('This product is not available.');
+                setError('The product could not be loaded.');
+            });
+    }, [productId]);
+
+    if (error) return <main className="product-state"><BrandMark className="products-mark" /><h1>Product unavailable</h1><p>{error}</p><a href="/products">Back to products</a></main>;
+    if (!product) return <PageLoader className="product-state" markClassName="products-mark">Opening the cellar…</PageLoader>;
+
+    return (
+        <div className="product-page">
+            <header className="product-page-nav"><a href="/products">← All products</a><a href="/" className="products-brand"><BrandMark className="products-mark" /><span>Siberian Wine Garden</span></a>{user?.role === 'admin' ? <a href={`/products?edit=${product.id}`}>Edit product</a> : <span />}</header>
+            <main className="product-page-main">
+                <section className="product-hero"><div className="product-hero-symbol">{product.name.slice(0, 1).toUpperCase()}</div><div className="product-hero-copy"><div className="product-hero-meta"><span>{product.category?.name || 'Uncategorised'}</span><StatusBadge status={product.status} /></div><h1>{product.name}</h1><p>{product.description || 'No description is available for this product.'}</p></div></section>
+                <section className="product-page-section"><div className="section-heading"><p className="product-kicker">Available formats</p><h2>Choose your variant</h2></div><div className="sku-grid">{product.skus.map((sku) => <article key={sku.id} className="sku-card"><div><span>{sku.sku}</span><h3>{sku.name}</h3></div><strong>{price(sku)}</strong><p>{sku.stock_quantity > 0 ? `${sku.stock_quantity} in stock` : 'Out of stock'} · per {sku.quantity_unit}</p></article>)}</div></section>
+                {!!product.attributes.length && <section className="product-page-section characteristics"><div className="section-heading"><p className="product-kicker">Product profile</p><h2>Characteristics</h2></div><dl>{product.attributes.map((attribute) => <div key={attribute.id}><dt>{attribute.name}</dt><dd>{attribute.value}{attribute.unit ? ` ${attribute.unit}` : ''}</dd></div>)}</dl></section>}
+            </main>
+        </div>
+    );
+}
+
+const root = document.getElementById('product-root');
+createRoot(root).render(<ProductView productId={root.dataset.productId} />);

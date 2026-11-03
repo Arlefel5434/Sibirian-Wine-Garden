@@ -7,14 +7,14 @@ use App\Models\User;
 
 class ProductPolicy
 {
-    public function viewAny(User $user): bool
+    public function viewAny(?User $user): bool
     {
         return true;
     }
 
-    public function view(User $user, Product $product): bool
+    public function view(?User $user, Product $product): bool
     {
-        return $user->isAdmin() || $product->status === 'active';
+        return $product->status === 'active' || $user?->isAdmin();
     }
 
     public function create(User $user): bool

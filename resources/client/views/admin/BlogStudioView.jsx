@@ -61,19 +61,17 @@ function BlogStudio() {
 
     useEffect(() => {
         refreshSession()
+            .catch(() => null)
             .then(async (session) => {
-                setUser(session.user);
+                setUser(session?.user || null);
                 await loadPosts();
 
                 const editId = new URLSearchParams(window.location.search).get('edit');
 
-                if (editId) {
+                if (editId && session?.user) {
                     const payload = await apiRequest(`/api/posts/${editId}`);
                     openEdit(payload.data);
                 }
-            })
-            .catch(() => {
-                window.location.assign('/login?redirect=/posts');
             })
             .finally(() => setLoading(false));
     }, []);
@@ -144,23 +142,23 @@ function BlogStudio() {
         <div className="studio-shell">
             <header className="studio-header">
                 <a href="/" className="studio-brand"><BrandMark className="studio-mark" /><span>Siberian Wine Garden</span></a>
-                <div className="user-chip"><span>{user?.name}</span><small>{user?.role || 'customer'}</small></div>
+                <div className="user-chip"><span>{user?.name || 'Guest'}</span><small>{user?.role || 'visitor'}</small></div>
             </header>
 
             <main className="studio-main">
                 <section className="page-heading">
                     <div><p className="kicker">Editorial desk</p><h1>Garden journal</h1><p>Shape field notes, harvest stories, and northern wine culture.</p></div>
-                    <Button onClick={openCreate}>Create story</Button>
+                    {user && <Button onClick={openCreate}>Create story</Button>}
                 </section>
 
                 <Notice className="notice" onClose={() => setNotice('')}>{notice}</Notice>
 
                 {posts.length ? (
                     <section className="posts-grid" aria-label="Journal posts">
-                        {posts.map((post) => <PostCard key={post.id} post={post} onEdit={openEdit} onDelete={deletePost} />)}
+                        {posts.map((post) => <PostCard key={post.id} post={post} canManage={user && (user.role === 'admin' || user.id === post.author?.id)} onEdit={openEdit} onDelete={deletePost} />)}
                     </section>
                 ) : (
-                    <section className="empty-state"><BrandMark className="studio-mark" /><h2>Your journal is waiting.</h2><p>Create the first story from the garden.</p><Button onClick={openCreate}>Write first story</Button></section>
+                    <section className="empty-state"><BrandMark className="studio-mark" /><h2>The journal is waiting.</h2><p>No published stories are available yet.</p>{user && <Button onClick={openCreate}>Write first story</Button>}</section>
                 )}
 
                 {meta?.last_page > 1 && <nav className="pagination" aria-label="Post pages">

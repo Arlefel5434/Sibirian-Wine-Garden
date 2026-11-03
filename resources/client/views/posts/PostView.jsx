@@ -7,11 +7,16 @@ import { apiRequest, refreshSession } from '../../lib/api';
 
 function PostPage({ postId }) {
     const [post, setPost] = useState(null);
+    const [user, setUser] = useState(null);
     const [error, setError] = useState('');
 
     useEffect(() => {
         refreshSession()
-            .then(() => apiRequest(`/api/posts/${postId}`))
+            .catch(() => null)
+            .then((session) => {
+                setUser(session?.user || null);
+                return apiRequest(`/api/posts/${postId}`);
+            })
             .then((payload) => setPost(payload.data))
             .catch((requestError) => {
                 if (requestError.status === 403) {
@@ -19,7 +24,7 @@ function PostPage({ postId }) {
                     return;
                 }
 
-                window.location.assign(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+                setError('The story could not be loaded.');
             });
     }, [postId]);
 
@@ -36,7 +41,7 @@ function PostPage({ postId }) {
             <header className="article-nav">
                 <a href="/posts" className="back-link">← Journal studio</a>
                 <a href="/" className="article-brand"><BrandMark className="article-mark" /><span>Siberian Wine Garden</span></a>
-                <a href={`/posts?edit=${post.id}`} className="edit-link">Edit story</a>
+                {user && (user.role === 'admin' || user.id === post.author?.id) ? <a href={`/posts?edit=${post.id}`} className="edit-link">Edit story</a> : <span />}
             </header>
 
             <main>
