@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrandMark, Button, Notice, PageLoader } from '../../components/common';
 import { ProductCard, ProductEditor } from '../../components/products';
 import { apiRequest, refreshSession } from '../../lib/api';
+import { PublicLayout } from '../../layouts/PublicLayout';
 import '../../styles/common.css';
 
 const emptySku = () => ({ key: crypto.randomUUID(), sku: '', name: '', stock_quantity: 0, price: 0, currency: 'EUR', quantity_unit: 'piece' });
@@ -132,11 +133,8 @@ function ProductCatalog() {
     if (loading) return <PageLoader className="products-loading" markClassName="products-mark">Opening the market…</PageLoader>;
 
     return (
-        <div className="products-shell">
-            <header className="products-header">
-                <a href="/" className="products-brand"><BrandMark className="products-mark" /><span>Siberian Wine Garden</span></a>
-                <nav><a href="/posts">Journal</a>{user ? <span>{user.name}</span> : <a href="/login?redirect=/products">Sign in</a>}</nav>
-            </header>
+        <PublicLayout>
+            <div className="products-shell">
             <main className="products-main">
                 <section className="products-heading">
                     <div><p className="product-kicker">Northern marketplace</p><h1>Cellar &amp; garden</h1><p>Wine, grapes, tools, and everything shaped by the northern harvest.</p></div>
@@ -162,7 +160,8 @@ function ProductCatalog() {
                 <button type="button" className="product-editor-backdrop" onClick={closeEditor} aria-label="Close editor" />
                 <ProductEditor product={editingProduct} form={form} options={options} errors={errors} saving={saving} onChange={(name, value) => setForm((current) => ({ ...current, [name]: value }))} onSkuChange={(index, field, value) => updateList('skus', index, field, value)} onAddSku={() => setForm((current) => ({ ...current, skus: [...current.skus, emptySku()] }))} onRemoveSku={(index) => setForm((current) => ({ ...current, skus: current.skus.filter((_, itemIndex) => itemIndex !== index) }))} onAttributeChange={(index, field, value) => updateList('attributes', index, field, value)} onAddAttribute={() => setForm((current) => ({ ...current, attributes: [...current.attributes, emptyAttribute()] }))} onRemoveAttribute={(index) => setForm((current) => ({ ...current, attributes: current.attributes.filter((_, itemIndex) => itemIndex !== index) }))} onCancel={closeEditor} onSubmit={saveProduct} />
             </>}
-        </div>
+            </div>
+        </PublicLayout>
     );
 }
 

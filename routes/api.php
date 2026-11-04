@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductOptionsController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('home', HomeController::class)->name('api.home');
 
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])

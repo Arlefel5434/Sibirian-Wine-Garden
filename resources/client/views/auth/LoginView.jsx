@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrandMark } from '../../components/common';
 import '../../styles/common.css';
 import { apiRequest, clearAccessToken, refreshSession, setAccessToken } from '../../lib/api';
+import { PublicLayout } from '../../layouts/PublicLayout';
 
 const requestedRedirect = new URLSearchParams(window.location.search).get('redirect');
 const redirectTo = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
@@ -101,15 +102,16 @@ function LoginPage() {
     }
 
     if (restoring) {
-        return <main className="auth-shell"><div className="loading-card" role="status">Opening the cellar…</div></main>;
+        return <PublicLayout><main className="auth-shell"><div className="loading-card" role="status">Opening the cellar…</div></main></PublicLayout>;
     }
 
     if (user && authenticated) {
-        return <SignedIn user={user} onLogout={handleLogout} />;
+        return <PublicLayout><SignedIn user={user} onLogout={handleLogout} /></PublicLayout>;
     }
 
     return (
-        <main className="auth-shell">
+        <PublicLayout>
+            <main className="auth-shell">
             <section className="story-panel" aria-label="Siberian Wine Garden">
                 <div className="brand-lockup"><BrandMark className="brand-mark" /><span>Siberian<br />Wine Garden</span></div>
                 <div className="story-copy">
@@ -171,7 +173,8 @@ function LoginPage() {
                     <p className="secure-note"><span>✓</span> Secured with encrypted JWT authentication</p>
                 </div>
             </section>
-        </main>
+            </main>
+        </PublicLayout>
     );
 }
 

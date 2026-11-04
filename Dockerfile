@@ -6,7 +6,7 @@ COPY package.json package-lock.json* ./
 
 RUN npm install -g npm@12.2.0
 
-RUN npm install
+RUN npm ci
 
 # Копируем весь проект (для vite)
 COPY . .

@@ -13,6 +13,7 @@ export default defineConfig({
                 'resources/css/post.css',
                 'resources/css/products.css',
                 'resources/js/app.js',
+                'resources/client/views/home/HomeView.jsx',
                 'resources/client/views/auth/LoginView.jsx',
                 'resources/client/views/admin/BlogStudioView.jsx',
                 'resources/client/views/posts/PostView.jsx',
