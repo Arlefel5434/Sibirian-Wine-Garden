@@ -82,6 +82,8 @@ button, input, textarea, select { font: inherit; }
 .sku-card h3 { margin: 6px 0 22px; color: #43242d; font: 600 21px 'Playfair Display', serif; }
 .sku-card > strong { color: #6d2639; font-size: 24px; }
 .sku-card p { margin: 7px 0 0; color: #89777a; font-size: 12px; }
+.sku-card .ui-button { width: 100%; margin-top: 20px; }
+.section-heading > p:last-child a { color: #6d2639; font-weight: 600; }
 .characteristics dl { margin: 0; border-top: 1px solid #d9cfc3; }
 .characteristics dl div { padding: 18px 4px; display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid #d9cfc3; }
 .characteristics dt { color: #806d70; }
