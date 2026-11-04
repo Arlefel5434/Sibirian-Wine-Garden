@@ -4,6 +4,7 @@ import { BrandMark, PageLoader, StatusBadge } from '../../components/common';
 import { PostContent } from '../../components/posts';
 import '../../styles/common.css';
 import { apiRequest, refreshSession } from '../../lib/api';
+import { PublicLayout } from '../../layouts/PublicLayout';
 
 function PostPage({ postId }) {
     const [post, setPost] = useState(null);
@@ -37,10 +38,10 @@ function PostPage({ postId }) {
     }
 
     return (
-        <div className="article-shell">
+        <PublicLayout>
+            <div className="article-shell">
             <header className="article-nav">
                 <a href="/posts" className="back-link">← Journal studio</a>
-                <a href="/" className="article-brand"><BrandMark className="article-mark" /><span>Siberian Wine Garden</span></a>
                 {user && (user.role === 'admin' || user.id === post.author?.id) ? <a href={`/posts?edit=${post.id}`} className="edit-link">Edit story</a> : <span />}
             </header>
 
@@ -57,7 +58,8 @@ function PostPage({ postId }) {
                     <PostContent blocks={post.body} />
                 </article>
             </main>
-        </div>
+            </div>
+        </PublicLayout>
     );
 }
 

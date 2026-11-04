@@ -1,10 +1,11 @@
 <?php
 
+use App\Http\Controllers\HomeController;
 use App\Models\Post;
 use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome');
+Route::get('/', HomeController::class)->name('home');
 
 Route::view('login', 'auth.login')->name('login');
 

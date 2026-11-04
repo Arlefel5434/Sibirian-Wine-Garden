@@ -4,6 +4,7 @@ import { PostCard, PostEditor } from '../../components/admin';
 import { BrandMark, Button, Notice, PageLoader } from '../../components/common';
 import '../../styles/common.css';
 import { apiRequest, refreshSession } from '../../lib/api';
+import { PublicLayout } from '../../layouts/PublicLayout';
 
 const emptyForm = {
     title: '',
@@ -139,12 +140,8 @@ function BlogStudio() {
     }
 
     return (
-        <div className="studio-shell">
-            <header className="studio-header">
-                <a href="/" className="studio-brand"><BrandMark className="studio-mark" /><span>Siberian Wine Garden</span></a>
-                <div className="user-chip"><span>{user?.name || 'Guest'}</span><small>{user?.role || 'visitor'}</small></div>
-            </header>
-
+        <PublicLayout>
+            <div className="studio-shell">
             <main className="studio-main">
                 <section className="page-heading">
                     <div><p className="kicker">Editorial desk</p><h1>Garden journal</h1><p>Shape field notes, harvest stories, and northern wine culture.</p></div>
@@ -169,7 +166,8 @@ function BlogStudio() {
             </main>
 
             {editorOpen && <><button type="button" className="editor-backdrop" onClick={closeEditor} aria-label="Close editor" /><PostEditor post={editingPost} form={form} errors={errors} saving={saving} onChange={(name, value) => setForm((current) => ({ ...current, [name]: value }))} onCancel={closeEditor} onSubmit={savePost} /></>}
-        </div>
+            </div>
+        </PublicLayout>
     );
 }
 
