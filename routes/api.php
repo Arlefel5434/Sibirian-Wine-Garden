@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CartItemController;
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PostController;
@@ -38,6 +39,9 @@ Route::middleware('auth:api')->name('api.')->group(function () {
     Route::delete('cart/items/{cartItem}', [CartItemController::class, 'destroy'])->name('cart.items.destroy');
     Route::post('checkout', CheckoutController::class)->middleware('throttle:10,1')->name('checkout');
     Route::get('orders', OrderController::class)->name('orders.index');
+    Route::get('favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+    Route::post('favorites/{product}', [FavoriteController::class, 'store'])->name('favorites.store');
+    Route::delete('favorites/{product}', [FavoriteController::class, 'destroy'])->name('favorites.destroy');
     Route::patch('profile', ProfileController::class)->name('profile.update');
     Route::apiResource('posts', PostController::class)->except(['index', 'show']);
     Route::get('product-options', ProductOptionsController::class)->name('product-options');

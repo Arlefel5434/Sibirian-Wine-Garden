@@ -18,6 +18,7 @@ export default defineConfig({
                 'resources/client/views/profile/ProfileView.jsx',
                 'resources/client/views/cart/CartView.jsx',
                 'resources/client/views/orders/OrdersView.jsx',
+                'resources/client/views/favorites/FavoritesView.jsx',
                 'resources/client/views/auth/LoginView.jsx',
                 'resources/client/views/admin/BlogStudioView.jsx',
                 'resources/client/views/posts/PostView.jsx',
