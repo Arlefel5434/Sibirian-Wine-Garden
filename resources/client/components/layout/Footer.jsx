@@ -11,7 +11,7 @@ export function Footer() {
                 </div>
                 <nav className="global-footer-navigation" aria-label="Sitemap">
                     <div><h2>Explore</h2><a href="/products">Products</a><a href="/posts">Journal</a><a href="/#story">Our story</a></div>
-                    <div><h2>Account</h2><a href="/login">Sign in</a><a href="/register">Create account</a><a href="/profile">Profile</a></div>
+                    <div><h2>Account</h2><a href="/login">Sign in</a><a href="/register">Create account</a><a href="/profile">Profile</a><a href="/favorites">Favourites</a></div>
                     <div><h2>Collections</h2><a href="/products">Wine</a><a href="/products">Grapes</a><a href="/products">Vineyard tools</a></div>
                 </nav>
             </div>

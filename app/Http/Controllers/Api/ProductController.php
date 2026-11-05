@@ -7,6 +7,7 @@ use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use App\Models\User;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,7 @@ class ProductController extends Controller
 
         $products = Product::query()
             ->with(['category', 'skus', 'attributeValues.attribute'])
+            ->when($user, fn ($query) => $query->withExists(['favoritedBy as is_favorite' => fn ($favorites) => $favorites->where('users.id', $user->id)]))
             ->when(! $user?->isAdmin(), fn ($query) => $query->where('status', 'active'))
             ->latest()
             ->paginate(15);
@@ -44,7 +46,7 @@ class ProductController extends Controller
         $user = $request->user('api');
         Gate::forUser($user)->authorize('view', $product);
 
-        return ProductResource::make($this->loadRelations($product));
+        return ProductResource::make($this->loadRelations($product, $user));
     }
 
     public function update(
@@ -65,8 +67,14 @@ class ProductController extends Controller
         return response()->noContent();
     }
 
-    private function loadRelations(Product $product): Product
+    private function loadRelations(Product $product, ?User $user = null): Product
     {
-        return $product->load(['category', 'skus', 'attributeValues.attribute']);
+        $product->load(['category', 'skus', 'attributeValues.attribute']);
+
+        if ($user) {
+            $product->loadExists(['favoritedBy as is_favorite' => fn ($favorites) => $favorites->where('users.id', $user->id)]);
+        }
+
+        return $product;
     }
 }

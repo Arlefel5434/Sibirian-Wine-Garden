@@ -4,6 +4,7 @@ import { BrandMark, Button, Notice, PageLoader } from '../../components/common';
 import { ProductCard, ProductEditor } from '../../components/products';
 import { apiRequest, refreshSession } from '../../lib/api';
 import { PublicLayout } from '../../layouts/PublicLayout';
+import { announceFavoritesUpdated } from '../../lib/favorites';
 import '../../styles/common.css';
 
 const emptySku = () => ({ key: crypto.randomUUID(), sku: '', name: '', stock_quantity: 0, price: 0, currency: 'EUR', quantity_unit: 'piece' });
@@ -44,6 +45,7 @@ function ProductCatalog() {
     const [errors, setErrors] = useState({});
     const [notice, setNotice] = useState('');
     const [saving, setSaving] = useState(false);
+    const [favoriteBusy, setFavoriteBusy] = useState(null);
 
     const canManage = user?.role === 'admin';
 
@@ -130,6 +132,27 @@ function ProductCatalog() {
         }
     }
 
+    async function toggleFavorite(product) {
+        if (!user) return window.location.assign(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+        setFavoriteBusy(product.id);
+
+        try {
+            if (product.is_favorite) {
+                await apiRequest(`/api/favorites/${product.id}`, { method: 'DELETE' });
+            } else {
+                await apiRequest(`/api/favorites/${product.id}`, { method: 'POST' });
+            }
+
+            setProducts((current) => current.map((item) => item.id === product.id ? { ...item, is_favorite: !product.is_favorite } : item));
+            const { meta: favoritesMeta } = await apiRequest('/api/favorites');
+            announceFavoritesUpdated(favoritesMeta.total);
+        } catch (error) {
+            setNotice(error.message);
+        } finally {
+            setFavoriteBusy(null);
+        }
+    }
+
     if (loading) return <PageLoader className="products-loading" markClassName="products-mark">Opening the market…</PageLoader>;
 
     return (
@@ -143,7 +166,7 @@ function ProductCatalog() {
                 <Notice className="products-notice" onClose={() => setNotice('')}>{notice}</Notice>
                 {products.length ? (
                     <section className="products-grid" aria-label="Products">
-                        {products.map((product) => <ProductCard key={product.id} product={product} canManage={canManage} onEdit={openEdit} onDelete={deleteProduct} />)}
+                        {products.map((product) => <ProductCard key={product.id} product={product} canManage={canManage} favoriteBusy={favoriteBusy === product.id} onEdit={openEdit} onDelete={deleteProduct} onToggleFavorite={toggleFavorite} />)}
                     </section>
                 ) : (
                     <section className="products-empty"><BrandMark className="products-mark" /><h2>The cellar is waiting.</h2><p>No products are available yet.</p>{canManage && <Button onClick={openCreate}>Create first product</Button>}</section>

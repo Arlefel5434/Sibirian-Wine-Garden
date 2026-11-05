@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, StatusBadge } from '../common';
+import { Button, FavoriteButton, StatusBadge } from '../common';
 
 function formatPrice(skus) {
     if (!skus?.length) {
@@ -14,14 +14,14 @@ function formatPrice(skus) {
     }).format(cheapest.price / 100);
 }
 
-export function ProductCard({ product, canManage, onEdit, onDelete }) {
+export function ProductCard({ product, canManage = false, favoriteBusy = false, onEdit, onDelete, onToggleFavorite }) {
     const stock = product.skus.reduce((total, sku) => total + sku.stock_quantity, 0);
 
     return (
         <article className="product-card">
             <div className="product-card-top">
                 <span className="product-category">{product.category?.name || 'Uncategorised'}</span>
-                <StatusBadge status={product.status} />
+                <div className="product-card-controls"><StatusBadge status={product.status} />{onToggleFavorite && <FavoriteButton active={product.is_favorite} busy={favoriteBusy} onClick={() => onToggleFavorite(product)} />}</div>
             </div>
             <div className="product-symbol" aria-hidden="true">{product.name.slice(0, 1).toUpperCase()}</div>
             <div className="product-card-copy">

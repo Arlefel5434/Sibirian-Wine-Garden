@@ -18,6 +18,7 @@ Route::view('profile', 'client-profile')
 
 Route::view('cart', 'cart.index')->name('cart');
 Route::view('orders', 'orders.index')->name('orders');
+Route::view('favorites', 'favorites.index')->name('favorites');
 
 require __DIR__.'/auth.php';
 
