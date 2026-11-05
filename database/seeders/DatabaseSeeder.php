@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Post;
 use App\Models\User;
+use App\Services\WalletService;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -21,6 +22,14 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $admin->profile->forceFill(['role' => 'admin'])->save();
+
+        $demo = User::factory()->create([
+            'name' => 'Demo Customer',
+            'email' => 'demo@example.com',
+            'password' => bcrypt('password'),
+        ]);
+
+        app(WalletService::class)->adjust($demo, 'credit', 250000, $admin, 'Initial demonstration balance');
 
         Post::factory()->count(10)->create([
             'user_id' => $admin->id,

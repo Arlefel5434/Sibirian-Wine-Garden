@@ -11,6 +11,6 @@ class OrderController extends Controller
 {
     public function __invoke(Request $request): AnonymousResourceCollection
     {
-        return OrderResource::collection($request->user('api')->orders()->with('items')->latest()->get());
+        return OrderResource::collection($request->user('api')->orders()->with(['items', 'payments' => fn ($query) => $query->latest()])->latest()->get());
     }
 }

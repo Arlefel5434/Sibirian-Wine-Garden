@@ -19,6 +19,8 @@ Route::view('profile', 'client-profile')
 Route::view('cart', 'cart.index')->name('cart');
 Route::view('orders', 'orders.index')->name('orders');
 Route::view('favorites', 'favorites.index')->name('favorites');
+Route::view('wallet', 'wallet.index')->name('wallet');
+Route::view('payments/{payment}/simulate', 'payments.simulate')->name('payments.simulate');
 
 require __DIR__.'/auth.php';
 

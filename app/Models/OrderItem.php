@@ -18,4 +18,9 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Order::class);
     }
+
+    public function sku(): BelongsTo
+    {
+        return $this->belongsTo(Sku::class);
+    }
 }
