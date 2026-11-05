@@ -1,7 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\CartItemController;
+use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductOptionsController;
@@ -28,6 +32,12 @@ Route::name('api.')->group(function () {
 });
 
 Route::middleware('auth:api')->name('api.')->group(function () {
+    Route::get('cart', CartController::class)->name('cart.show');
+    Route::post('cart/items', [CartItemController::class, 'store'])->name('cart.items.store');
+    Route::patch('cart/items/{cartItem}', [CartItemController::class, 'update'])->name('cart.items.update');
+    Route::delete('cart/items/{cartItem}', [CartItemController::class, 'destroy'])->name('cart.items.destroy');
+    Route::post('checkout', CheckoutController::class)->middleware('throttle:10,1')->name('checkout');
+    Route::get('orders', OrderController::class)->name('orders.index');
     Route::patch('profile', ProfileController::class)->name('profile.update');
     Route::apiResource('posts', PostController::class)->except(['index', 'show']);
     Route::get('product-options', ProductOptionsController::class)->name('product-options');

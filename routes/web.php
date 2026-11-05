@@ -16,6 +16,9 @@ Route::view('dashboard', 'dashboard')
 Route::view('profile', 'client-profile')
     ->name('profile');
 
+Route::view('cart', 'cart.index')->name('cart');
+Route::view('orders', 'orders.index')->name('orders');
+
 require __DIR__.'/auth.php';
 
 Route::view('posts', 'blog.manage')->name('posts.index');
