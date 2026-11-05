@@ -25,6 +25,7 @@ class User extends Authenticatable implements JWTSubject
     {
         static::created(function (User $user) {
             $user->profile()->create();
+            $user->wallet()->create();
         });
     }
 
@@ -59,6 +60,11 @@ class User extends Authenticatable implements JWTSubject
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function wallet(): HasOne
+    {
+        return $this->hasOne(Wallet::class);
     }
 
     public function favoriteProducts(): BelongsToMany

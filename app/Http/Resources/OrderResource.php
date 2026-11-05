@@ -16,6 +16,7 @@ class OrderResource extends JsonResource
             'currency' => $this->currency,
             'delivery_info' => $this->delivery_info,
             'items' => $this->items->map(fn ($item) => ['id' => $item->id, 'product_name' => $item->product_name, 'variant_name' => $item->variant_name, 'quantity' => $item->quantity, 'price' => $item->price_at_purchase, 'currency' => $item->currency]),
+            'payments' => PaymentResource::collection($this->whenLoaded('payments')),
             'created_at' => $this->created_at?->toISOString(),
         ];
     }

@@ -64,6 +64,10 @@
 .global-shop-actions { display: flex; align-items: center; gap: 10px; }
 .global-shop-actions a { color: inherit; text-decoration: none; }
 .global-mobile-shop-actions { display: none; }
+.global-wallet-link { min-height: 46px; padding: 7px 15px; display: flex; justify-content: center; flex-direction: column; gap: 2px; border: 1px solid rgba(255, 255, 255, .35); border-radius: 999px; transition: border-color .2s ease, background .2s ease; }
+.global-wallet-link:hover { border-color: rgba(255, 255, 255, .7); background: rgba(255, 255, 255, .08); }
+.global-wallet-link span { color: rgba(255, 248, 238, .65); font-size: 8px; line-height: 1; text-transform: uppercase; letter-spacing: .12em; }
+.global-wallet-link strong { font-size: 12px; line-height: 1.2; white-space: nowrap; }
 .global-cart-link, .global-favorites-link { position: relative; min-height: 46px; display: inline-flex; align-items: center; transition: color .2s ease; }
 .global-cart-icon, .global-favorites-icon { width: 46px; height: 46px; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, .35); border-radius: 50%; transition: border-color .2s ease, background .2s ease; }
 .global-cart-link:hover .global-cart-icon, .global-favorites-link:hover .global-favorites-icon { border-color: rgba(255, 255, 255, .7); background: rgba(255, 255, 255, .08); }
@@ -93,6 +97,9 @@
     .global-header { min-height: 76px; padding: 12px 18px; gap: 8px; }
     .global-header > .global-brand span { display: none; }
     .global-mobile-shop-actions { margin-left: auto; display: flex; gap: 8px; }
+    .global-mobile-shop-actions .global-wallet-link { min-height: 40px; padding: 6px 10px; }
+    .global-mobile-shop-actions .global-wallet-link span { display: none; }
+    .global-mobile-shop-actions .global-wallet-link strong { font-size: 10px; }
     .global-mobile-shop-actions .global-cart-icon, .global-mobile-shop-actions .global-favorites-icon { width: 40px; height: 40px; }
     .global-mobile-shop-actions .global-cart-link, .global-mobile-shop-actions .global-favorites-link { min-height: 40px; padding: 0; }
     .global-desktop-shop-actions { display: none; }
