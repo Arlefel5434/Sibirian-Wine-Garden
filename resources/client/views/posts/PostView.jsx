@@ -42,7 +42,7 @@ function PostPage({ postId }) {
             <div className="article-shell">
             <header className="article-nav">
                 <a href="/posts" className="back-link">← Journal studio</a>
-                {user && (user.role === 'admin' || user.id === post.author?.id) ? <a href={`/posts?edit=${post.id}`} className="edit-link">Edit story</a> : <span />}
+                {['admin', 'content_manager'].includes(user?.role) ? <a href={`/posts?edit=${post.id}`} className="edit-link">Edit story</a> : <span />}
             </header>
 
             <main>

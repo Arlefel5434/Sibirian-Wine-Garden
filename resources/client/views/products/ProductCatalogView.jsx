@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrandMark, Button, Notice, PageLoader } from '../../components/common';
-import { ProductCard, ProductEditor } from '../../components/products';
+import { ProductCard, ProductEditor, ProductFilters } from '../../components/products';
 import { apiRequest, refreshSession } from '../../lib/api';
 import { PublicLayout } from '../../layouts/PublicLayout';
 import { announceFavoritesUpdated } from '../../lib/favorites';
@@ -10,6 +10,42 @@ import '../../styles/common.css';
 const emptySku = () => ({ key: crypto.randomUUID(), sku: '', name: '', stock_quantity: 0, price: 0, currency: 'EUR', quantity_unit: 'piece' });
 const emptyAttribute = () => ({ key: crypto.randomUUID(), attribute_id: '', value: '' });
 const emptyForm = () => ({ name: '', description: '', status: 'draft', category_id: '', skus: [emptySku()], attributes: [] });
+const emptyFilters = () => ({ search: '', categories: [], priceFrom: '', priceTo: '', inStock: false, status: '', sort: 'newest', attributes: {} });
+
+function filtersFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const attributes = {};
+
+    for (const [key, value] of params.entries()) {
+        const match = key.match(/^attributes\[(\d+)]\[\]$/);
+        if (match) attributes[match[1]] = [...(attributes[match[1]] || []), value];
+    }
+
+    return {
+        search: params.get('search') || '',
+        categories: params.getAll('categories[]'),
+        priceFrom: params.has('price_from') ? String(Number(params.get('price_from')) / 100) : '',
+        priceTo: params.has('price_to') ? String(Number(params.get('price_to')) / 100) : '',
+        inStock: params.get('in_stock') === '1',
+        status: params.get('status') || '',
+        sort: params.get('sort') || 'newest',
+        attributes,
+    };
+}
+
+function filterParams(filters, page = 1) {
+    const params = new URLSearchParams();
+    if (filters.search.trim()) params.set('search', filters.search.trim());
+    filters.categories.forEach((category) => params.append('categories[]', category));
+    if (filters.priceFrom !== '') params.set('price_from', String(Math.round(Number(filters.priceFrom) * 100)));
+    if (filters.priceTo !== '') params.set('price_to', String(Math.round(Number(filters.priceTo) * 100)));
+    if (filters.inStock) params.set('in_stock', '1');
+    if (filters.status) params.set('status', filters.status);
+    if (filters.sort !== 'newest') params.set('sort', filters.sort);
+    Object.entries(filters.attributes).forEach(([attributeId, values]) => values.forEach((value) => params.append(`attributes[${attributeId}][]`, value)));
+    if (page > 1) params.set('page', String(page));
+    return params;
+}
 
 function formFromProduct(product) {
     return {
@@ -46,13 +82,17 @@ function ProductCatalog() {
     const [notice, setNotice] = useState('');
     const [saving, setSaving] = useState(false);
     const [favoriteBusy, setFavoriteBusy] = useState(null);
+    const [filters, setFilters] = useState(filtersFromUrl);
+    const [filterOptions, setFilterOptions] = useState({ categories: [], attributes: [], statuses: [] });
 
-    const canManage = user?.role === 'admin';
+    const canManage = ['admin', 'content_manager'].includes(user?.role);
 
-    async function loadProducts(page = 1) {
-        const payload = await apiRequest(`/api/products?page=${page}`);
+    async function loadProducts(nextFilters = filters, page = 1, syncUrl = false) {
+        const params = filterParams(nextFilters, page);
+        const payload = await apiRequest(`/api/products?${params}`);
         setProducts(payload.data);
         setMeta(payload.meta);
+        if (syncUrl) window.history.pushState({}, '', `/products${params.size ? `?${params}` : ''}`);
     }
 
     useEffect(() => {
@@ -60,22 +100,37 @@ function ProductCatalog() {
             .catch(() => null)
             .then(async (session) => {
                 setUser(session?.user || null);
-                const requests = [loadProducts()];
+                const page = Number(new URLSearchParams(window.location.search).get('page') || 1);
+                const requests = [loadProducts(filters, page), apiRequest('/api/product-filters').then(setFilterOptions)];
 
-                if (session?.user?.role === 'admin') {
+                if (['admin', 'content_manager'].includes(session?.user?.role)) {
                     requests.push(apiRequest('/api/product-options').then(setOptions));
                 }
 
                 await Promise.all(requests);
 
                 const editId = new URLSearchParams(window.location.search).get('edit');
-                if (editId && session?.user?.role === 'admin') {
+                const createRequested = new URLSearchParams(window.location.search).get('create') === '1';
+                if (editId && ['admin', 'content_manager'].includes(session?.user?.role)) {
                     const payload = await apiRequest(`/api/products/${editId}`);
                     openEdit(payload.data);
+                } else if (createRequested && ['admin', 'content_manager'].includes(session?.user?.role)) {
+                    openCreate();
                 }
             })
             .finally(() => setLoading(false));
     }, []);
+
+    function applyFilters(nextFilters) {
+        setFilters(nextFilters);
+        loadProducts(nextFilters, 1, true);
+    }
+
+    function resetFilters() {
+        const reset = emptyFilters();
+        setFilters(reset);
+        loadProducts(reset, 1, true);
+    }
 
     function openCreate() {
         setEditingProduct(null);
@@ -111,7 +166,7 @@ function ProductCatalog() {
             await apiRequest(path, { method: editingProduct ? 'PUT' : 'POST', body: JSON.stringify(payloadFrom(form)) });
             setNotice(editingProduct ? 'Product updated.' : 'Product created.');
             closeEditor();
-            await loadProducts(meta?.current_page || 1);
+            await loadProducts(filters, meta?.current_page || 1);
         } catch (error) {
             setErrors(error.errors || {});
             if (!Object.keys(error.errors || {}).length) setNotice(error.message);
@@ -120,13 +175,13 @@ function ProductCatalog() {
         }
     }
 
-    async function deleteProduct(product) {
-        if (!window.confirm(`Delete “${product.name}”? This cannot be undone.`)) return;
+    async function archiveProduct(product) {
+        if (!window.confirm(`Archive “${product.name}”? Customers will no longer see or purchase it.`)) return;
 
         try {
             await apiRequest(`/api/products/${product.id}`, { method: 'DELETE' });
-            setNotice('Product deleted.');
-            await loadProducts(products.length === 1 && meta?.current_page > 1 ? meta.current_page - 1 : meta?.current_page || 1);
+            setNotice('Product archived.');
+            await loadProducts(filters, products.length === 1 && meta?.current_page > 1 ? meta.current_page - 1 : meta?.current_page || 1);
         } catch (error) {
             setNotice(error.message);
         }
@@ -164,18 +219,19 @@ function ProductCatalog() {
                     {canManage ? <Button onClick={openCreate}>Add product</Button> : !user && <a className="product-login-action" href="/login?redirect=/products">Admin sign in</a>}
                 </section>
                 <Notice className="products-notice" onClose={() => setNotice('')}>{notice}</Notice>
+                <ProductFilters configuration={filterOptions} filters={filters} canManage={canManage} onApply={applyFilters} onReset={resetFilters} />
                 {products.length ? (
                     <section className="products-grid" aria-label="Products">
-                        {products.map((product) => <ProductCard key={product.id} product={product} canManage={canManage} favoriteBusy={favoriteBusy === product.id} onEdit={openEdit} onDelete={deleteProduct} onToggleFavorite={toggleFavorite} />)}
+                        {products.map((product) => <ProductCard key={product.id} product={product} canManage={canManage} favoriteBusy={favoriteBusy === product.id} onEdit={openEdit} onArchive={archiveProduct} onToggleFavorite={toggleFavorite} />)}
                     </section>
                 ) : (
                     <section className="products-empty"><BrandMark className="products-mark" /><h2>The cellar is waiting.</h2><p>No products are available yet.</p>{canManage && <Button onClick={openCreate}>Create first product</Button>}</section>
                 )}
                 {meta?.last_page > 1 && (
                     <nav className="products-pagination" aria-label="Product pages">
-                        <Button variant="secondary" disabled={meta.current_page === 1} onClick={() => loadProducts(meta.current_page - 1)}>Previous</Button>
+                        <Button variant="secondary" disabled={meta.current_page === 1} onClick={() => loadProducts(filters, meta.current_page - 1, true)}>Previous</Button>
                         <span>{meta.current_page} / {meta.last_page}</span>
-                        <Button variant="secondary" disabled={meta.current_page === meta.last_page} onClick={() => loadProducts(meta.current_page + 1)}>Next</Button>
+                        <Button variant="secondary" disabled={meta.current_page === meta.last_page} onClick={() => loadProducts(filters, meta.current_page + 1, true)}>Next</Button>
                     </nav>
                 )}
             </main>

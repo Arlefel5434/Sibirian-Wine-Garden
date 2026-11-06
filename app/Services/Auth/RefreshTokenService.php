@@ -56,6 +56,12 @@ class RefreshTokenService
                 return ['error' => 'The refresh token has expired.'];
             }
 
+            if ($token->user->isBanned()) {
+                $this->revokeFamily($token->family_id);
+
+                return ['error' => 'This account is blocked.'];
+            }
+
             $token->update([
                 'last_used_at' => now(),
                 'revoked_at' => now(),

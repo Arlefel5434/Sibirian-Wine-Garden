@@ -22,6 +22,14 @@ function tokenFor(User $user): string
     return auth('api')->login($user);
 }
 
+function contentManager(): User
+{
+    $user = User::factory()->create();
+    $user->profile->forceFill(['role' => 'content_manager'])->save();
+
+    return $user;
+}
+
 test('post write routes require authentication', function () {
     $post = Post::factory()->create(['status' => 'draft']);
 
@@ -44,8 +52,8 @@ test('guests can read published posts but not drafts', function () {
     $this->getJson("/api/posts/{$draft->id}")->assertForbidden();
 });
 
-test('authenticated users can create posts assigned to themselves', function () {
-    $author = User::factory()->create();
+test('content managers can create posts assigned to themselves', function () {
+    $author = contentManager();
     $otherUser = User::factory()->create();
 
     $response = $this
@@ -70,7 +78,7 @@ test('authenticated users can create posts assigned to themselves', function () 
 });
 
 test('post creation validates content', function () {
-    $user = User::factory()->create();
+    $user = contentManager();
 
     $this
         ->withToken(tokenFor($user))
@@ -84,22 +92,30 @@ test('post creation validates content', function () {
         ->assertJsonValidationErrors(['title', 'preview_img', 'status', 'body']);
 });
 
-test('users see published posts and their drafts while administrators see every post', function () {
-    $author = User::factory()->create();
+test('customers see published posts while content managers and administrators see every post', function () {
+    $customer = User::factory()->create();
     $otherUser = User::factory()->create();
+    $manager = contentManager();
     $admin = User::factory()->create();
     $admin->profile->forceFill(['role' => 'admin'])->save();
-    $ownPost = Post::factory()->for($author, 'author')->create(['status' => 'draft']);
+    $managerPost = Post::factory()->for($manager, 'author')->create(['status' => 'draft']);
     $otherPost = Post::factory()->for($otherUser, 'author')->create(['status' => 'draft']);
     $publishedPost = Post::factory()->for($otherUser, 'author')->create(['status' => 'published']);
 
     $this
-        ->withToken(tokenFor($author))
+        ->withToken(tokenFor($customer))
         ->getJson('/api/posts')
         ->assertOk()
-        ->assertJsonCount(2, 'data')
-        ->assertJsonFragment(['id' => $ownPost->id])
+        ->assertJsonCount(1, 'data')
         ->assertJsonFragment(['id' => $publishedPost->id]);
+
+    $this
+        ->withToken(tokenFor($manager))
+        ->getJson('/api/posts')
+        ->assertOk()
+        ->assertJsonCount(3, 'data')
+        ->assertJsonFragment(['id' => $otherPost->id])
+        ->assertJsonFragment(['id' => $managerPost->id]);
 
     $this
         ->withToken(tokenFor($admin))
@@ -109,8 +125,8 @@ test('users see published posts and their drafts while administrators see every 
         ->assertJsonFragment(['id' => $otherPost->id]);
 });
 
-test('post authors can view and update their posts', function () {
-    $author = User::factory()->create();
+test('content managers can view and update drafts', function () {
+    $author = contentManager();
     $post = Post::factory()->for($author, 'author')->create([
         'title' => 'Old title',
         'slug' => 'old-title',
@@ -157,7 +173,7 @@ test('administrators can update and delete posts belonging to another user', fun
 });
 
 test('duplicate post titles receive unique slugs', function () {
-    $user = User::factory()->create();
+    $user = contentManager();
     $token = tokenFor($user);
 
     $first = $this->withToken($token)->postJson('/api/posts', postPayload())->assertCreated();
@@ -165,6 +181,25 @@ test('duplicate post titles receive unique slugs', function () {
 
     expect($first->json('data.slug'))->toBe('northern-harvest-notes')
         ->and($second->json('data.slug'))->toBe('northern-harvest-notes-2');
+});
+
+test('customers cannot create posts', function () {
+    $customer = User::factory()->create();
+
+    $this->withToken(tokenFor($customer))->postJson('/api/posts', postPayload())->assertForbidden();
+});
+
+test('content managers can update and delete posts belonging to another user', function () {
+    $manager = contentManager();
+    $post = Post::factory()->create();
+    $token = tokenFor($manager);
+
+    $this->withToken($token)
+        ->putJson("/api/posts/{$post->id}", postPayload(['status' => 'published']))
+        ->assertOk()
+        ->assertJsonPath('data.status', 'published');
+
+    $this->withToken($token)->deleteJson("/api/posts/{$post->id}")->assertNoContent();
 });
 
 test('post page can be opened by slug', function () {

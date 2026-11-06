@@ -52,6 +52,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(RefreshToken::class);
     }
 
+    public function ban(): HasOne
+    {
+        return $this->hasOne(UserBan::class);
+    }
+
     public function cart(): HasOne
     {
         return $this->hasOne(Cart::class);
@@ -80,6 +85,21 @@ class User extends Authenticatable implements JWTSubject
     public function isAdmin(): bool
     {
         return $this->profile?->role === 'admin';
+    }
+
+    public function isContentManager(): bool
+    {
+        return $this->profile?->role === 'content_manager';
+    }
+
+    public function canManageContent(): bool
+    {
+        return $this->isAdmin() || $this->isContentManager();
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->relationLoaded('ban') ? $this->ban !== null : $this->ban()->exists();
     }
 
     public function getJWTIdentifier(): mixed

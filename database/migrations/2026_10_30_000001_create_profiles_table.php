@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
-            $table->enum('role', ['customer', 'admin'])->default('customer');
+            $table->enum('role', ['customer', 'content_manager', 'admin'])->default('customer');
             $table->string('phone_number', 32)->nullable();
             $table->string('avatar_path')->nullable();
             $table->text('bio')->nullable();

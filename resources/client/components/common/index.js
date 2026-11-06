@@ -1,6 +1,7 @@
 export { BrandMark } from './BrandMark';
 export { Button } from './Button';
 export { CartWineIcon } from './CartWineIcon';
+export { DoorIcon } from './DoorIcon';
 export { FavoriteButton } from './FavoriteButton';
 export { FavoriteIcon } from './FavoriteIcon';
 export { FormField } from './FormField';

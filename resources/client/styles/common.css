@@ -20,6 +20,17 @@
 .account-sections .account-panel p { flex: 1; }
 .account-sections .ui-button { margin-top: auto; }
 .account-sections a.ui-button { text-decoration: none; }
+.admin-dashboard-sections { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.content-dashboard-sections { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.account-shell-admin > h1 { color: #541c2b; }
+.account-shell-content > h1 { color: #59643b; }
+.account-contact-panel { margin-top: 34px; }
+.profile-workspace-section { margin-top: 34px; }
+.profile-workspace-section > h2 { margin: 0; font: 600 30px 'Playfair Display', serif; }
+.profile-workspace-section .account-sections { margin-top: 16px; }
+.profile-logout { margin-top: 58px; padding-top: 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-top: 1px solid var(--color-border); }
+.profile-logout h2 { margin: 0 0 7px; font: 600 22px 'Playfair Display', serif; }
+.profile-logout p { margin: 0; color: var(--color-muted); }
 
 .ui-button { border: 1px solid transparent; border-radius: 999px; padding: 13px 22px; font: inherit; font-weight: 600; cursor: pointer; }
 .ui-button-primary { color: #fff; background: var(--color-wine); box-shadow: 0 10px 30px rgba(71, 25, 37, .18); }
@@ -79,6 +90,8 @@
 .global-cart-count, .global-favorites-count { position: absolute; left: -3px; bottom: -3px; min-width: 18px; height: 18px; padding: 0 4px; display: grid; place-items: center; border: 2px solid #241017; border-radius: 999px; color: #241017; background: #d9ae73; font-size: 8px; font-weight: 700; line-height: 1; }
 .global-account-link { padding: 11px 17px; border: 1px solid rgba(255, 255, 255, .35); border-radius: 999px; }
 .global-account-link span { margin-left: 9px; }
+.global-login-link { display: inline-flex; align-items: center; gap: 8px; }
+.global-login-link svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .global-menu-toggle { display: none; border: 0; background: transparent; }
 .global-footer { margin-top: auto; color: #e9ded5; background: #180b10; }
 .global-footer-main { padding: 85px 0 80px; display: grid; grid-template-columns: .9fr 1.1fr; gap: 11vw; }
@@ -93,6 +106,8 @@
 .global-footer-bottom button { padding: 0; border: 0; color: #9b858a; background: none; text-transform: inherit; letter-spacing: inherit; font: inherit; cursor: pointer; }
 
 @media (max-width: 760px) {
+    .content-dashboard-sections { grid-template-columns: 1fr; }
+    .profile-logout { align-items: flex-start; flex-direction: column; }
     .global-layout-shell { width: calc(100% - 36px); }
     .global-header { min-height: 76px; padding: 12px 18px; gap: 8px; }
     .global-header > .global-brand span { display: none; }

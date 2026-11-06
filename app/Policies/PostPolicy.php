@@ -15,22 +15,21 @@ class PostPolicy
     public function view(?User $user, Post $post): bool
     {
         return $post->status === 'published'
-            || $user?->isAdmin()
-            || $post->user_id === $user?->id;
+            || $user?->canManageContent();
     }
 
     public function create(User $user): bool
     {
-        return true;
+        return $user->canManageContent();
     }
 
     public function update(User $user, Post $post): bool
     {
-        return $user->isAdmin() || $post->user_id === $user->id;
+        return $user->canManageContent();
     }
 
     public function delete(User $user, Post $post): bool
     {
-        return $user->isAdmin() || $post->user_id === $user->id;
+        return $user->canManageContent();
     }
 }

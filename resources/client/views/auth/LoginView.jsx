@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrandMark } from '../../components/common';
 import '../../styles/common.css';
-import { apiRequest, clearAccessToken, refreshSession, setAccessToken } from '../../lib/api';
+import { apiRequest, refreshSession, setAccessToken } from '../../lib/api';
 import { PublicLayout } from '../../layouts/PublicLayout';
 
 const requestedRedirect = new URLSearchParams(window.location.search).get('redirect');
@@ -18,27 +18,6 @@ function EyeIcon({ open }) {
     );
 }
 
-function SignedIn({ user, onLogout }) {
-    return (
-        <main className="auth-shell">
-            <section className="welcome-card" aria-labelledby="welcome-title">
-                <div className="signed-in-mark"><BrandMark className="brand-mark" /></div>
-                <p className="eyebrow">Cellar access granted</p>
-                <h1 id="welcome-title">Welcome back, {user.name}.</h1>
-                <p className="welcome-copy">Your account is authenticated with a short-lived JWT access token.</p>
-                <dl className="account-details">
-                    <div><dt>Email</dt><dd>{user.email}</dd></div>
-                    <div><dt>Role</dt><dd>{user.role || 'customer'}</dd></div>
-                </dl>
-                <div className="welcome-actions">
-                    <a href="/posts" className="primary-link">Manage journal</a>
-                    <button type="button" className="text-button" onClick={onLogout}>Sign out</button>
-                </div>
-            </section>
-        </main>
-    );
-}
-
 function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -46,21 +25,11 @@ function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [restoring, setRestoring] = useState(true);
     const [error, setError] = useState('');
-    const [authenticated, setAuthenticated] = useState(false);
-    const [user, setUser] = useState(null);
 
     useEffect(() => {
         refreshSession()
-            .then((payload) => {
-                if (redirectTo) {
-                    window.location.assign(redirectTo);
-                    return;
-                }
-
-                setUser(payload.user);
-                setAuthenticated(true);
-            })
-            .catch(() => setAuthenticated(false))
+            .then(() => window.location.replace(redirectTo || '/profile'))
+            .catch(() => null)
             .finally(() => setRestoring(false));
     }, []);
 
@@ -75,12 +44,7 @@ function LoginPage() {
                 body: JSON.stringify({ email, password }),
             });
             setAccessToken(payload.access_token);
-            setAuthenticated(true);
-            setUser(payload.user);
-
-            if (redirectTo) {
-                window.location.assign(redirectTo);
-            }
+            window.location.replace(redirectTo || '/profile');
         } catch (loginError) {
             setError(loginError.message);
         } finally {
@@ -88,25 +52,8 @@ function LoginPage() {
         }
     }
 
-    async function handleLogout() {
-        try {
-            await apiRequest('/api/auth/logout', {
-                method: 'POST',
-            }, false);
-        } finally {
-            clearAccessToken();
-            setAuthenticated(false);
-            setUser(null);
-            setPassword('');
-        }
-    }
-
     if (restoring) {
         return <PublicLayout><main className="auth-shell"><div className="loading-card" role="status">Opening the cellar…</div></main></PublicLayout>;
-    }
-
-    if (user && authenticated) {
-        return <PublicLayout><SignedIn user={user} onLogout={handleLogout} /></PublicLayout>;
     }
 
     return (
