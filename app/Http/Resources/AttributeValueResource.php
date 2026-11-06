@@ -12,10 +12,11 @@ class AttributeValueResource extends JsonResource
         return [
             'id' => $this->id,
             'attribute_id' => $this->attribute_id,
-            'name' => $this->whenLoaded('attribute', fn () => $this->attribute->name),
+            'name' => $this->whenLoaded('attribute', fn () => $this->attribute->localized('name')),
             'type' => $this->whenLoaded('attribute', fn () => $this->attribute->type),
-            'unit' => $this->whenLoaded('attribute', fn () => $this->attribute->unit),
-            'value' => $this->value,
+            'unit' => $this->whenLoaded('attribute', fn () => $this->attribute->localized('unit')),
+            'value' => $this->localized('value'),
+            'canonical_value' => $this->value,
         ];
     }
 }

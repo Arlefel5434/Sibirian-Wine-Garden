@@ -4,6 +4,7 @@ import { BrandMark } from '../../components/common';
 import '../../styles/common.css';
 import { apiRequest, refreshSession, setAccessToken } from '../../lib/api';
 import { PublicLayout } from '../../layouts/PublicLayout';
+import { t } from '../../i18n';
 
 const requestedRedirect = new URLSearchParams(window.location.search).get('redirect');
 const redirectTo = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
@@ -54,7 +55,7 @@ function LoginPage() {
     }
 
     if (restoring) {
-        return <PublicLayout><main className="auth-shell"><div className="loading-card" role="status">Opening the cellar…</div></main></PublicLayout>;
+        return <PublicLayout><main className="auth-shell"><div className="loading-card" role="status">{t('Opening the cellar…')}</div></main></PublicLayout>;
     }
 
     return (
@@ -63,25 +64,25 @@ function LoginPage() {
             <section className="story-panel" aria-label="Siberian Wine Garden">
                 <div className="brand-lockup"><BrandMark className="brand-mark" /><span>Siberian<br />Wine Garden</span></div>
                 <div className="story-copy">
-                    <p className="eyebrow">From northern soil</p>
-                    <h1>A private path into the garden.</h1>
-                    <p>Discover small-batch wines, resilient grape varieties, and the tools behind every harvest.</p>
+                    <p className="eyebrow">{t('From northern soil')}</p>
+                    <h1>{t('A private path into the garden.')}</h1>
+                    <p>{t('Discover small-batch wines, resilient grape varieties, and the tools behind every harvest.')}</p>
                 </div>
-                <p className="vintage-note">Est. in Siberia · Crafted with patience</p>
+                <p className="vintage-note">{t('Est. in Siberia · Crafted with patience')}</p>
             </section>
 
             <section className="form-panel" aria-labelledby="login-title">
                 <div className="form-wrap">
                     <a href="/" className="mobile-brand" aria-label="Siberian Wine Garden home"><BrandMark className="brand-mark" /></a>
-                    <p className="eyebrow">Members' cellar</p>
-                    <h2 id="login-title">Welcome back</h2>
-                    <p className="form-intro">Sign in to continue to your account.</p>
+                    <p className="eyebrow">{t("Members' cellar")}</p>
+                    <h2 id="login-title">{t('Welcome back')}</h2>
+                    <p className="form-intro">{t('Sign in to continue to your account.')}</p>
 
                     <form onSubmit={handleSubmit} noValidate>
-                        {verified && <div className="success-message" role="status">Your email is confirmed. You can now sign in.</div>}
+                        {verified && <div className="success-message" role="status">{t('Your email is confirmed. You can now sign in.')}</div>}
                         {error && <div className="error-message" role="alert">{error}</div>}
 
-                        <label htmlFor="email">Email address</label>
+                        <label htmlFor="email">{t('Email address')}</label>
                         <input
                             id="email"
                             name="email"
@@ -94,8 +95,8 @@ function LoginPage() {
                         />
 
                         <div className="label-row">
-                            <label htmlFor="password">Password</label>
-                            <a href="/forgot-password">Forgot password?</a>
+                            <label htmlFor="password">{t('Password')}</label>
+                            <a href="/forgot-password">{t('Forgot password?')}</a>
                         </div>
                         <div className="password-field">
                             <input
@@ -105,21 +106,21 @@ function LoginPage() {
                                 autoComplete="current-password"
                                 value={password}
                                 onChange={(event) => setPassword(event.target.value)}
-                                placeholder="Enter your password"
+                                placeholder={t('Enter your password')}
                                 required
                             />
-                            <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                            <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={t(showPassword ? 'Hide password' : 'Show password')}>
                                 <EyeIcon open={showPassword} />
                             </button>
                         </div>
 
                         <button className="submit-button" type="submit" disabled={loading}>
-                            {loading ? 'Opening cellar…' : 'Sign in'}
+                            {t(loading ? 'Opening cellar…' : 'Sign in')}
                         </button>
                     </form>
 
-                    <p className="register-copy">New to the garden? <a href="/register">Create an account</a></p>
-                    <p className="secure-note"><span>✓</span> Secured with encrypted JWT authentication</p>
+                    <p className="register-copy">{t('New to the garden?')} <a href="/register">{t('Create an account')}</a></p>
+                    <p className="secure-note"><span>✓</span> {t('Secured with encrypted JWT authentication')}</p>
                 </div>
             </section>
             </main>

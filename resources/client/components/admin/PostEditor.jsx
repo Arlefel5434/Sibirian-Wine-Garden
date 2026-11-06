@@ -37,6 +37,20 @@ export function PostEditor({ post, form, errors, saving, onChange, onCancel, onS
                     </Select>
                 </FormField>
 
+                <div className="section-title"><span>02</span><h3>Russian translation</h3></div>
+
+                <FormField label="Заголовок" name="ru_title" error={errors['translations.0.title']?.[0]}>
+                    <Input id="ru_title" value={form.ru_title} onChange={(event) => onChange('ru_title', event.target.value)} />
+                </FormField>
+
+                <FormField label="Краткое описание" name="ru_preview_text" error={errors['translations.0.preview_text']?.[0]}>
+                    <Textarea id="ru_preview_text" rows="3" maxLength="500" value={form.ru_preview_text} onChange={(event) => onChange('ru_preview_text', event.target.value)} />
+                </FormField>
+
+                <FormField label="Текст" name="ru_content" error={errors['translations.0.body']?.[0]}>
+                    <Textarea id="ru_content" rows="10" value={form.ru_content} onChange={(event) => onChange('ru_content', event.target.value)} />
+                </FormField>
+
                 <div className="editor-actions">
                     <Button variant="secondary" onClick={onCancel}>Cancel</Button>
                     <Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save story'}</Button>

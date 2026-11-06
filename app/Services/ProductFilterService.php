@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Attribute;
+use App\Models\ProductTranslation;
 use Illuminate\Database\Eloquent\Builder;
 
 class ProductFilterService
@@ -10,7 +11,15 @@ class ProductFilterService
     public function apply(Builder $query, array $filters, bool $canManage): Builder
     {
         $query
-            ->when($filters['search'] ?? null, fn (Builder $query, string $search) => $query->where('name', 'ilike', "%{$search}%"))
+            ->when($filters['search'] ?? null, fn (Builder $query, string $search) => $query->where(function (Builder $query) use ($search) {
+                $query->where('name', 'ilike', "%{$search}%")
+                    ->orWhere('description', 'ilike', "%{$search}%")
+                    ->orWhereHas('translations', fn (Builder $query) => $query
+                        ->where('locale', app()->getLocale())
+                        ->where(fn (Builder $query) => $query
+                            ->where('name', 'ilike', "%{$search}%")
+                            ->orWhere('description', 'ilike', "%{$search}%")));
+            }))
             ->when($filters['categories'] ?? null, fn (Builder $query, array $categories) => $query->whereIn('category_id', $categories))
             ->when(isset($filters['price_from']) || isset($filters['price_to']), function (Builder $query) use ($filters) {
                 $query->whereHas('skus', function (Builder $query) use ($filters) {
@@ -38,7 +47,13 @@ class ProductFilterService
         $query->withMin('skus', 'price');
 
         return match ($filters['sort'] ?? 'newest') {
-            'name_asc' => $query->orderBy('name'),
+            'name_asc' => $query
+                ->orderBy(ProductTranslation::query()
+                    ->select('name')
+                    ->whereColumn('product_id', 'products.id')
+                    ->where('locale', app()->getLocale())
+                    ->limit(1))
+                ->orderBy('name'),
             'price_asc' => $query->orderBy('skus_min_price'),
             'price_desc' => $query->orderByDesc('skus_min_price'),
             default => $query->latest(),

@@ -21,8 +21,15 @@ class ProductFilterOptionsController extends Controller
         return response()->json([
             'categories' => Category::query()
                 ->whereHas('products', $visibleProducts)
-                ->orderBy('name')
-                ->get(['id', 'name', 'slug']),
+                ->with('translations')
+                ->get()
+                ->map(fn (Category $category) => [
+                    'id' => $category->id,
+                    'name' => $category->localized('name'),
+                    'slug' => $category->localized('slug'),
+                ])
+                ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
+                ->values(),
             'price' => [
                 'min' => (int) (clone $prices)->min('price'),
                 'max' => (int) (clone $prices)->max('price'),
@@ -30,15 +37,22 @@ class ProductFilterOptionsController extends Controller
             ],
             'attributes' => Attribute::query()
                 ->whereHas('values.product', $visibleProducts)
-                ->with(['values' => fn ($query) => $query->whereHas('product', $visibleProducts)->select('attribute_id', 'value')->distinct()->orderBy('value')])
-                ->orderBy('name')
+                ->with([
+                    'translations',
+                    'values' => fn ($query) => $query->whereHas('product', $visibleProducts)->with('translations')->orderBy('value'),
+                ])
                 ->get()
                 ->map(fn (Attribute $attribute) => [
                     'id' => $attribute->id,
-                    'name' => $attribute->name,
-                    'unit' => $attribute->unit,
-                    'values' => $attribute->values->pluck('value')->values(),
-                ]),
+                    'name' => $attribute->localized('name'),
+                    'unit' => $attribute->localized('unit'),
+                    'values' => $attribute->values->unique('value')->map(fn ($value) => [
+                        'value' => $value->value,
+                        'label' => $value->localized('value'),
+                    ])->values(),
+                ])
+                ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
+                ->values(),
             'statuses' => $canManage ? ['draft', 'active', 'archived'] : [],
             'sorts' => ['newest', 'name_asc', 'price_asc', 'price_desc'],
         ]);

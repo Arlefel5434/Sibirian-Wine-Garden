@@ -70,6 +70,16 @@ export function ProductEditor({ product, form, options, errors, saving, onChange
                     </div>)}
                 </section>
 
+                <section className="editor-section">
+                    <div className="section-title"><span>04</span><h3>Russian translation</h3></div>
+                    <FormField label="Название" name="ru_name" error={errorAt(errors, 'translations.0.name')}>
+                        <Input id="ru_name" value={form.ru_name} onChange={(event) => onChange('ru_name', event.target.value)} />
+                    </FormField>
+                    <FormField label="Описание" name="ru_description" error={errorAt(errors, 'translations.0.description')}>
+                        <Textarea id="ru_description" rows="5" value={form.ru_description} onChange={(event) => onChange('ru_description', event.target.value)} />
+                    </FormField>
+                </section>
+
                 <div className="product-editor-actions"><Button variant="secondary" onClick={onCancel}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save product'}</Button></div>
             </form>
         </aside>

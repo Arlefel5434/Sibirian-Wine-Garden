@@ -16,8 +16,16 @@ class ProductOptionsController extends Controller
         Gate::authorize('create', Product::class);
 
         return response()->json([
-            'categories' => Category::query()->orderBy('name')->get(['id', 'name']),
-            'attributes' => Attribute::query()->orderBy('name')->get(['id', 'name', 'type', 'unit']),
+            'categories' => Category::query()->with('translations')->orderBy('name')->get()->map(fn (Category $category) => [
+                'id' => $category->id,
+                'name' => $category->localized('name'),
+            ]),
+            'attributes' => Attribute::query()->with('translations')->orderBy('name')->get()->map(fn (Attribute $attribute) => [
+                'id' => $attribute->id,
+                'name' => $attribute->localized('name'),
+                'type' => $attribute->type,
+                'unit' => $attribute->localized('unit'),
+            ]),
         ]);
     }
 }

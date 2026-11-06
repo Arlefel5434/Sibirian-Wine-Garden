@@ -12,7 +12,7 @@ class SkuResource extends JsonResource
         return [
             'id' => $this->id,
             'sku' => $this->sku,
-            'name' => $this->name,
+            'name' => $this->localized('name'),
             'stock_quantity' => $this->stock_quantity,
             'price' => $this->price,
             'currency' => $this->currency,

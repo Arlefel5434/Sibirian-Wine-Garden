@@ -14,7 +14,7 @@ class CartService
 {
     public function get(User $user): Cart
     {
-        return $user->cart()->firstOrCreate()->load('items.sku.product');
+        return $user->cart()->firstOrCreate()->load(['items.sku.translations', 'items.sku.product.translations']);
     }
 
     public function add(User $user, int $skuId, int $quantity): Cart
@@ -28,7 +28,7 @@ class CartService
             $this->ensureAvailable($sku, $newQuantity);
             $cart->items()->updateOrCreate(['sku_id' => $sku->id], ['quantity' => $newQuantity]);
 
-            return $cart->load('items.sku.product');
+            return $cart->load(['items.sku.translations', 'items.sku.product.translations']);
         });
     }
 
@@ -40,7 +40,7 @@ class CartService
             $this->ensureAvailable($sku, $quantity);
             $item->update(['quantity' => $quantity]);
 
-            return $item->cart->load('items.sku.product');
+            return $item->cart->load(['items.sku.translations', 'items.sku.product.translations']);
         });
     }
 
@@ -50,7 +50,7 @@ class CartService
         $cart = $item->cart;
         $item->delete();
 
-        return $cart->load('items.sku.product');
+        return $cart->load(['items.sku.translations', 'items.sku.product.translations']);
     }
 
     public function checkout(User $user, array $delivery): Order

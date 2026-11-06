@@ -11,13 +11,25 @@ class PostResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'title' => $this->title,
-            'slug' => $this->slug,
+            'title' => $this->localized('title'),
+            'slug' => $this->localized('slug'),
             'preview_img' => $this->preview_img,
-            'preview_text' => $this->preview_text,
+            'preview_text' => $this->localized('preview_text'),
             'status' => $this->status,
-            'body' => $this->body,
+            'body' => $this->localized('body'),
+            'source' => [
+                'locale' => config('localization.default'),
+                'title' => $this->title,
+                'preview_text' => $this->preview_text,
+                'body' => $this->body,
+            ],
             'author' => UserResource::make($this->whenLoaded('author')),
+            'translations' => $this->whenLoaded('translations', fn () => $this->translations->map(fn ($translation) => [
+                'locale' => $translation->locale,
+                'title' => $translation->title,
+                'preview_text' => $translation->preview_text,
+                'body' => $translation->body,
+            ])->values()),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

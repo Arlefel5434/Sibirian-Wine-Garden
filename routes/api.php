@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CartItemController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\LocaleController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PaymentSimulationController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('home', HomeController::class)->name('api.home');
+Route::get('locales', LocaleController::class)->name('api.locales');
 Route::get('product-filters', ProductFilterOptionsController::class)->name('api.product-filters');
 
 Route::prefix('auth')->group(function () {

@@ -23,6 +23,13 @@ class StorePostRequest extends FormRequest
             'body' => ['required', 'array', 'min:1'],
             'body.*.type' => ['required', 'string', Rule::in(['heading', 'paragraph', 'image'])],
             'body.*.data' => ['required', 'array'],
+            'translations' => ['sometimes', 'array'],
+            'translations.*.locale' => ['required', 'string', 'distinct', Rule::in(array_keys(config('localization.supported')))],
+            'translations.*.title' => ['required', 'string', 'max:255'],
+            'translations.*.preview_text' => ['nullable', 'string', 'max:500'],
+            'translations.*.body' => ['required', 'array', 'min:1'],
+            'translations.*.body.*.type' => ['required', 'string', Rule::in(['heading', 'paragraph', 'image'])],
+            'translations.*.body.*.data' => ['required', 'array'],
         ];
     }
 }

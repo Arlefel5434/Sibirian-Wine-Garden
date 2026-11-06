@@ -12,7 +12,13 @@ class FavoriteService
     {
         return $user->favoriteProducts()
             ->where('products.status', 'active')
-            ->with(['category', 'skus', 'attributeValues.attribute'])
+            ->with([
+                'translations',
+                'category.translations',
+                'skus.translations',
+                'attributeValues.translations',
+                'attributeValues.attribute.translations',
+            ])
             ->withExists(['favoritedBy as is_favorite' => fn ($favorites) => $favorites->where('users.id', $user->id)])
             ->orderByPivot('created_at', 'desc')
             ->paginate(15);
@@ -23,7 +29,13 @@ class FavoriteService
         $user->favoriteProducts()->syncWithoutDetaching([$product->id]);
 
         return $product
-            ->load(['category', 'skus', 'attributeValues.attribute'])
+            ->load([
+                'translations',
+                'category.translations',
+                'skus.translations',
+                'attributeValues.translations',
+                'attributeValues.attribute.translations',
+            ])
             ->setAttribute('is_favorite', true);
     }
 
