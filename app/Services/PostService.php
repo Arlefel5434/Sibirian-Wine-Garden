@@ -10,9 +10,11 @@ use Illuminate\Support\Str;
 
 class PostService
 {
+    public function __construct(private readonly ContentCache $cache) {}
+
     public function create(User $author, array $data): Post
     {
-        return DB::transaction(function () use ($author, $data) {
+        $post = DB::transaction(function () use ($author, $data) {
             $translations = $data['translations'] ?? [];
             unset($data['translations']);
             $post = $author->posts()->create([
@@ -23,11 +25,15 @@ class PostService
 
             return $post;
         });
+
+        $this->cache->invalidatePosts();
+
+        return $post;
     }
 
     public function update(Post $post, array $data): Post
     {
-        return DB::transaction(function () use ($post, $data) {
+        $post = DB::transaction(function () use ($post, $data) {
             $translations = $data['translations'] ?? [];
             unset($data['translations']);
 
@@ -40,11 +46,16 @@ class PostService
 
             return $post;
         });
+
+        $this->cache->invalidatePosts();
+
+        return $post;
     }
 
     public function delete(Post $post): void
     {
         $post->delete();
+        $this->cache->invalidatePosts();
     }
 
     private function uniqueSlug(string $title, ?Post $ignoredPost = null): string

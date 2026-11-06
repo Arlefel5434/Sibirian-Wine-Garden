@@ -26,7 +26,7 @@ class ProductFilterRequest extends FormRequest
             'attributes' => ['nullable', 'array', 'max:20'],
             'attributes.*' => ['array', 'max:30'],
             'attributes.*.*' => ['string', 'max:255'],
-            'page' => ['nullable', 'integer', 'min:1'],
+            'page' => ['nullable', 'integer', 'min:1', 'max:500'],
         ];
     }
 }

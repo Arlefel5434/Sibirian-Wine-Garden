@@ -12,6 +12,8 @@ use Illuminate\Validation\ValidationException;
 
 class CartService
 {
+    public function __construct(private readonly ContentCache $cache) {}
+
     public function get(User $user): Cart
     {
         return $user->cart()->firstOrCreate()->load(['items.sku.translations', 'items.sku.product.translations']);
@@ -55,7 +57,7 @@ class CartService
 
     public function checkout(User $user, array $delivery): Order
     {
-        return DB::transaction(function () use ($user, $delivery) {
+        $order = DB::transaction(function () use ($user, $delivery) {
             $cart = Cart::query()->where('user_id', $user->id)->lockForUpdate()->first();
 
             if (! $cart || ! $cart->items()->exists()) {
@@ -101,6 +103,10 @@ class CartService
 
             return $order->load('items');
         });
+
+        $this->cache->invalidateProducts();
+
+        return $order;
     }
 
     private function ownedItem(User $user, int $itemId): CartItem

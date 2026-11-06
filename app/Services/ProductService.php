@@ -9,9 +9,11 @@ use Illuminate\Support\Str;
 
 class ProductService
 {
+    public function __construct(private readonly ContentCache $cache) {}
+
     public function create(array $data): Product
     {
-        return DB::transaction(function () use ($data) {
+        $product = DB::transaction(function () use ($data) {
             $skus = $data['skus'];
             $attributes = $data['attributes'] ?? [];
             $translations = $data['translations'] ?? [];
@@ -28,11 +30,15 @@ class ProductService
 
             return $product;
         });
+
+        $this->cache->invalidateProducts();
+
+        return $product;
     }
 
     public function update(Product $product, array $data): Product
     {
-        return DB::transaction(function () use ($product, $data) {
+        $product = DB::transaction(function () use ($product, $data) {
             $skus = $data['skus'];
             $attributes = $data['attributes'] ?? [];
             $translations = $data['translations'] ?? [];
@@ -70,6 +76,10 @@ class ProductService
 
             return $product;
         });
+
+        $this->cache->invalidateProducts();
+
+        return $product;
     }
 
     public function archive(Product $product): void
@@ -79,6 +89,7 @@ class ProductService
         }
 
         $product->update(['status' => 'archived']);
+        $this->cache->invalidateProducts();
     }
 
     private function uniqueSlug(string $name, ?Product $ignoredProduct = null): string
