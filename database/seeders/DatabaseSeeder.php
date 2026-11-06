@@ -49,5 +49,6 @@ class DatabaseSeeder extends Seeder
             ->create();
 
         $this->call(ProductCatalogSeeder::class);
+        $this->call(LocalizationSeeder::class);
     }
 }

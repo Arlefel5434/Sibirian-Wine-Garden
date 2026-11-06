@@ -22,7 +22,7 @@ class PostController extends Controller
         Gate::forUser($user)->authorize('viewAny', Post::class);
 
         $posts = Post::query()
-            ->with('author.profile')
+            ->with(['author.profile', 'translations'])
             ->when(! $user?->canManageContent(), fn ($query) => $query->where('status', 'published'))
             ->latest()
             ->paginate(9);
@@ -34,7 +34,7 @@ class PostController extends Controller
     {
         $post = $posts->create($request->user(), $request->validated());
 
-        return PostResource::make($post->load('author.profile'))
+        return PostResource::make($post->load(['author.profile', 'translations']))
             ->response()
             ->setStatusCode(Response::HTTP_CREATED);
     }
@@ -44,7 +44,7 @@ class PostController extends Controller
         $user = $request->user('api');
         Gate::forUser($user)->authorize('view', $post);
 
-        return PostResource::make($post->load('author.profile'));
+        return PostResource::make($post->load(['author.profile', 'translations']));
     }
 
     public function update(
@@ -53,7 +53,7 @@ class PostController extends Controller
         PostService $posts,
     ): PostResource {
         return PostResource::make(
-            $posts->update($post, $request->validated())->load('author.profile'),
+            $posts->update($post, $request->validated())->load(['author.profile', 'translations']),
         );
     }
 

@@ -6,6 +6,7 @@ import { PublicLayout } from '../../layouts/PublicLayout';
 import { apiRequest, refreshSession } from '../../lib/api';
 import { announceFavoritesUpdated } from '../../lib/favorites';
 import '../../styles/common.css';
+import { t } from '../../i18n';
 
 function FavoritesView() {
     const [products, setProducts] = useState(null);
@@ -31,10 +32,10 @@ function FavoritesView() {
         }
     }
 
-    if (!products) return <PageLoader className="products-loading" markClassName="products-mark">Opening your favourites…</PageLoader>;
+    if (!products) return <PageLoader className="products-loading" markClassName="products-mark">{t('Opening your favourites…')}</PageLoader>;
 
-    return <PublicLayout><main className="products-main favorites-main"><section className="products-heading"><div><p className="product-kicker">Saved for later</p><h1>Your favourites</h1><p>A personal collection of wines, grapes, and garden finds worth returning to.</p></div><a className="product-login-action" href="/products">Explore products</a></section>
-        {products.length ? <section className="products-grid" aria-label="Favourite products">{products.map((product) => <ProductCard key={product.id} product={product} favoriteBusy={busy === product.id} onToggleFavorite={removeFavorite} />)}</section> : <section className="products-empty"><BrandMark className="products-mark" /><h2>Nothing saved yet.</h2><p>Use the heart on any product to keep it here.</p><a className="product-login-action" href="/products">Browse the market</a></section>}
+    return <PublicLayout><main className="products-main favorites-main"><section className="products-heading"><div><p className="product-kicker">{t('Saved for later')}</p><h1>{t('Your favourites')}</h1><p>{t('A personal collection of wines, grapes, and garden finds worth returning to.')}</p></div><a className="product-login-action" href="/products">{t('Explore products')}</a></section>
+        {products.length ? <section className="products-grid" aria-label={t('Your favourites')}>{products.map((product) => <ProductCard key={product.id} product={product} favoriteBusy={busy === product.id} onToggleFavorite={removeFavorite} />)}</section> : <section className="products-empty"><BrandMark className="products-mark" /><h2>{t('Nothing saved yet.')}</h2><p>{t('Use the heart on any product to keep it here.')}</p><a className="product-login-action" href="/products">{t('Browse the market')}</a></section>}
     </main></PublicLayout>;
 }
 

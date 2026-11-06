@@ -30,6 +30,10 @@ class StoreProductRequest extends FormRequest
             'attributes' => ['sometimes', 'array'],
             'attributes.*.attribute_id' => ['required', 'integer', 'distinct', 'exists:attributes,id'],
             'attributes.*.value' => ['required', 'string', 'max:255'],
+            'translations' => ['sometimes', 'array'],
+            'translations.*.locale' => ['required', 'string', 'distinct', Rule::in(array_keys(config('localization.supported')))],
+            'translations.*.name' => ['required', 'string', 'max:255'],
+            'translations.*.description' => ['nullable', 'string'],
         ];
     }
 }

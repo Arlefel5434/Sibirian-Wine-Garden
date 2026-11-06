@@ -12,6 +12,9 @@ const emptyForm = {
     preview_text: '',
     status: 'draft',
     content: '',
+    ru_title: '',
+    ru_preview_text: '',
+    ru_content: '',
 };
 
 function bodyText(body) {
@@ -23,23 +26,39 @@ function bodyText(body) {
 }
 
 function postForm(post) {
+    const russian = post.translations?.find((translation) => translation.locale === 'ru');
+
     return {
-        title: post.title,
+        title: post.source?.title || post.title,
         preview_img: post.preview_img || '',
-        preview_text: post.preview_text || '',
+        preview_text: post.source?.preview_text || '',
         status: post.status,
-        content: bodyText(post.body),
+        content: bodyText(post.source?.body || post.body),
+        ru_title: russian?.title || '',
+        ru_preview_text: russian?.preview_text || '',
+        ru_content: bodyText(russian?.body),
     };
 }
 
 function payloadFrom(form) {
-    return {
+    const payload = {
         title: form.title,
         preview_img: form.preview_img || null,
         preview_text: form.preview_text || null,
         status: form.status,
         body: [{ type: 'paragraph', data: { text: form.content } }],
     };
+
+    if (form.ru_title.trim()) {
+        payload.translations = [{
+            locale: 'ru',
+            title: form.ru_title.trim(),
+            preview_text: form.ru_preview_text || null,
+            body: [{ type: 'paragraph', data: { text: form.ru_content } }],
+        }];
+    }
+
+    return payload;
 }
 
 function BlogStudio() {

@@ -25,7 +25,7 @@ class ProductController extends Controller
         Gate::forUser($user)->authorize('viewAny', Product::class);
 
         $query = Product::query()
-            ->with(['category', 'skus', 'attributeValues.attribute'])
+            ->with($this->relations())
             ->when($user, fn ($query) => $query->withExists(['favoritedBy as is_favorite' => fn ($favorites) => $favorites->where('users.id', $user->id)]))
             ->when(! $user?->canManageContent(), fn ($query) => $query->where('status', 'active'));
 
@@ -71,12 +71,23 @@ class ProductController extends Controller
 
     private function loadRelations(Product $product, ?User $user = null): Product
     {
-        $product->load(['category', 'skus', 'attributeValues.attribute']);
+        $product->load($this->relations());
 
         if ($user) {
             $product->loadExists(['favoritedBy as is_favorite' => fn ($favorites) => $favorites->where('users.id', $user->id)]);
         }
 
         return $product;
+    }
+
+    private function relations(): array
+    {
+        return [
+            'translations',
+            'category.translations',
+            'skus.translations',
+            'attributeValues.translations',
+            'attributeValues.attribute.translations',
+        ];
     }
 }

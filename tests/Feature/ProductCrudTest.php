@@ -261,7 +261,8 @@ test('catalog exposes filter configuration from current data', function () {
         ->assertJsonPath('price.min', 3200)
         ->assertJsonPath('price.max', 3200)
         ->assertJsonPath('attributes.0.id', $origin->id)
-        ->assertJsonPath('attributes.0.values.0', 'Siberia');
+        ->assertJsonPath('attributes.0.values.0.value', 'Siberia')
+        ->assertJsonPath('attributes.0.values.0.label', 'Siberia');
 });
 
 test('catalog rejects invalid filter values', function () {

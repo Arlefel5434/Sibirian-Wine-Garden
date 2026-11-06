@@ -14,7 +14,11 @@ class CartItemResource extends JsonResource
             'quantity' => $this->quantity,
             'line_total' => $this->quantity * $this->sku->price,
             'sku' => SkuResource::make($this->sku),
-            'product' => ['id' => $this->sku->product->id, 'name' => $this->sku->product->name, 'slug' => $this->sku->product->slug],
+            'product' => [
+                'id' => $this->sku->product->id,
+                'name' => $this->sku->product->localized('name'),
+                'slug' => $this->sku->product->localized('slug'),
+            ],
         ];
     }
 }

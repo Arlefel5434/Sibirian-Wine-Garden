@@ -6,10 +6,11 @@ import { apiRequest, refreshSession } from '../../lib/api';
 import { PublicLayout } from '../../layouts/PublicLayout';
 import { announceFavoritesUpdated } from '../../lib/favorites';
 import '../../styles/common.css';
+import { t } from '../../i18n';
 
 const emptySku = () => ({ key: crypto.randomUUID(), sku: '', name: '', stock_quantity: 0, price: 0, currency: 'EUR', quantity_unit: 'piece' });
 const emptyAttribute = () => ({ key: crypto.randomUUID(), attribute_id: '', value: '' });
-const emptyForm = () => ({ name: '', description: '', status: 'draft', category_id: '', skus: [emptySku()], attributes: [] });
+const emptyForm = () => ({ name: '', description: '', ru_name: '', ru_description: '', status: 'draft', category_id: '', skus: [emptySku()], attributes: [] });
 const emptyFilters = () => ({ search: '', categories: [], priceFrom: '', priceTo: '', inStock: false, status: '', sort: 'newest', attributes: {} });
 
 function filtersFromUrl() {
@@ -48,9 +49,13 @@ function filterParams(filters, page = 1) {
 }
 
 function formFromProduct(product) {
+    const russian = product.translations?.find((translation) => translation.locale === 'ru');
+
     return {
-        name: product.name,
-        description: product.description || '',
+        name: product.source?.name || product.name,
+        description: product.source?.description || '',
+        ru_name: russian?.name || '',
+        ru_description: russian?.description || '',
         status: product.status,
         category_id: product.category?.id || '',
         skus: product.skus.map((sku) => ({ ...sku, key: `sku-${sku.id}` })),
@@ -59,7 +64,7 @@ function formFromProduct(product) {
 }
 
 function payloadFrom(form) {
-    return {
+    const payload = {
         name: form.name,
         description: form.description || null,
         status: form.status,
@@ -67,6 +72,12 @@ function payloadFrom(form) {
         skus: form.skus.map(({ key, ...sku }) => ({ ...sku, stock_quantity: Number(sku.stock_quantity), price: Number(sku.price) })),
         attributes: form.attributes.map(({ key, id, name, type, unit, ...attribute }) => ({ attribute_id: Number(attribute.attribute_id), value: attribute.value })),
     };
+
+    if (form.ru_name.trim()) {
+        payload.translations = [{ locale: 'ru', name: form.ru_name.trim(), description: form.ru_description || null }];
+    }
+
+    return payload;
 }
 
 function ProductCatalog() {
@@ -208,15 +219,15 @@ function ProductCatalog() {
         }
     }
 
-    if (loading) return <PageLoader className="products-loading" markClassName="products-mark">Opening the market…</PageLoader>;
+    if (loading) return <PageLoader className="products-loading" markClassName="products-mark">{t('Opening the market…')}</PageLoader>;
 
     return (
         <PublicLayout>
             <div className="products-shell">
             <main className="products-main">
                 <section className="products-heading">
-                    <div><p className="product-kicker">Northern marketplace</p><h1>Cellar &amp; garden</h1><p>Wine, grapes, tools, and everything shaped by the northern harvest.</p></div>
-                    {canManage ? <Button onClick={openCreate}>Add product</Button> : !user && <a className="product-login-action" href="/login?redirect=/products">Admin sign in</a>}
+                    <div><p className="product-kicker">{t('Northern marketplace')}</p><h1>{t('Cellar & garden')}</h1><p>{t('Wine, grapes, tools, and everything shaped by the northern harvest.')}</p></div>
+                    {canManage ? <Button onClick={openCreate}>{t('Add a product')}</Button> : !user && <a className="product-login-action" href="/login?redirect=/products">{t('Admin sign in')}</a>}
                 </section>
                 <Notice className="products-notice" onClose={() => setNotice('')}>{notice}</Notice>
                 <ProductFilters configuration={filterOptions} filters={filters} canManage={canManage} onApply={applyFilters} onReset={resetFilters} />
@@ -225,13 +236,13 @@ function ProductCatalog() {
                         {products.map((product) => <ProductCard key={product.id} product={product} canManage={canManage} favoriteBusy={favoriteBusy === product.id} onEdit={openEdit} onArchive={archiveProduct} onToggleFavorite={toggleFavorite} />)}
                     </section>
                 ) : (
-                    <section className="products-empty"><BrandMark className="products-mark" /><h2>The cellar is waiting.</h2><p>No products are available yet.</p>{canManage && <Button onClick={openCreate}>Create first product</Button>}</section>
+                    <section className="products-empty"><BrandMark className="products-mark" /><h2>{t('The cellar is waiting.')}</h2><p>{t('No products are available yet.')}</p>{canManage && <Button onClick={openCreate}>{t('Create first product')}</Button>}</section>
                 )}
                 {meta?.last_page > 1 && (
                     <nav className="products-pagination" aria-label="Product pages">
-                        <Button variant="secondary" disabled={meta.current_page === 1} onClick={() => loadProducts(filters, meta.current_page - 1, true)}>Previous</Button>
+                        <Button variant="secondary" disabled={meta.current_page === 1} onClick={() => loadProducts(filters, meta.current_page - 1, true)}>{t('Previous')}</Button>
                         <span>{meta.current_page} / {meta.last_page}</span>
-                        <Button variant="secondary" disabled={meta.current_page === meta.last_page} onClick={() => loadProducts(filters, meta.current_page + 1, true)}>Next</Button>
+                        <Button variant="secondary" disabled={meta.current_page === meta.last_page} onClick={() => loadProducts(filters, meta.current_page + 1, true)}>{t('Next')}</Button>
                     </nav>
                 )}
             </main>

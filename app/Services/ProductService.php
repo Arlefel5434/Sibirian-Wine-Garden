@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Models\ProductTranslation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -13,7 +14,8 @@ class ProductService
         return DB::transaction(function () use ($data) {
             $skus = $data['skus'];
             $attributes = $data['attributes'] ?? [];
-            unset($data['skus'], $data['attributes']);
+            $translations = $data['translations'] ?? [];
+            unset($data['skus'], $data['attributes'], $data['translations']);
 
             $product = Product::query()->create([
                 ...$data,
@@ -22,6 +24,7 @@ class ProductService
 
             $product->skus()->createMany($skus);
             $product->attributeValues()->createMany($attributes);
+            $this->syncTranslations($product, $translations);
 
             return $product;
         });
@@ -32,7 +35,8 @@ class ProductService
         return DB::transaction(function () use ($product, $data) {
             $skus = $data['skus'];
             $attributes = $data['attributes'] ?? [];
-            unset($data['skus'], $data['attributes']);
+            $translations = $data['translations'] ?? [];
+            unset($data['skus'], $data['attributes'], $data['translations']);
 
             if ($product->name !== $data['name']) {
                 $data['slug'] = $this->uniqueSlug($data['name'], $product);
@@ -62,6 +66,7 @@ class ProductService
             }
 
             $product->attributeValues()->whereNotIn('attribute_id', $attributeIds)->delete();
+            $this->syncTranslations($product, $translations);
 
             return $product;
         });
@@ -85,6 +90,48 @@ class ProductService
         while (Product::query()
             ->where('slug', $slug)
             ->when($ignoredProduct, fn ($query) => $query->whereKeyNot($ignoredProduct->getKey()))
+            ->exists()) {
+            $slug = $base.'-'.$suffix;
+            $suffix++;
+        }
+
+        return $slug;
+    }
+
+    private function syncTranslations(Product $product, array $translations): void
+    {
+        $translations = collect($translations)
+            ->keyBy('locale')
+            ->put(config('localization.default'), [
+                'locale' => config('localization.default'),
+                'name' => $product->name,
+                'description' => $product->description,
+            ]);
+
+        foreach ($translations as $translation) {
+            $locale = $translation['locale'];
+            $existing = $product->translations()->where('locale', $locale)->first();
+            $product->translations()->updateOrCreate(
+                ['locale' => $locale],
+                [
+                    'name' => $translation['name'],
+                    'slug' => $this->uniqueTranslationSlug($translation['name'], $locale, $existing),
+                    'description' => $translation['description'] ?? null,
+                ],
+            );
+        }
+    }
+
+    private function uniqueTranslationSlug(string $name, string $locale, ?ProductTranslation $ignored = null): string
+    {
+        $base = Str::slug($name) ?: 'product';
+        $slug = $base;
+        $suffix = 2;
+
+        while (ProductTranslation::query()
+            ->where('locale', $locale)
+            ->where('slug', $slug)
+            ->when($ignored, fn ($query) => $query->whereKeyNot($ignored->getKey()))
             ->exists()) {
             $slug = $base.'-'.$suffix;
             $suffix++;

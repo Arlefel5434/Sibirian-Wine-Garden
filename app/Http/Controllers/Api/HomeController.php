@@ -15,13 +15,19 @@ class HomeController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $posts = Post::query()
-            ->with('author.profile')
+            ->with(['author.profile', 'translations'])
             ->where('status', 'published')
             ->latest()
             ->limit(3)
             ->get();
         $products = Product::query()
-            ->with(['category', 'skus', 'attributeValues.attribute'])
+            ->with([
+                'translations',
+                'category.translations',
+                'skus.translations',
+                'attributeValues.translations',
+                'attributeValues.attribute.translations',
+            ])
             ->where('status', 'active')
             ->latest()
             ->limit(4)
