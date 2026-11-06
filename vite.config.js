@@ -23,6 +23,8 @@ export default defineConfig({
                 'resources/client/views/payments/PaymentSimulationView.jsx',
                 'resources/client/views/auth/LoginView.jsx',
                 'resources/client/views/admin/BlogStudioView.jsx',
+                'resources/client/views/admin/AdminOrdersView.jsx',
+                'resources/client/views/admin/AdminUsersView.jsx',
                 'resources/client/views/posts/PostView.jsx',
                 'resources/client/views/products/ProductCatalogView.jsx',
                 'resources/client/views/products/ProductView.jsx',

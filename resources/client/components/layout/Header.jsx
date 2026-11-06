@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrandMark, CartWineIcon, FavoriteIcon } from '../common';
+import { BrandMark, CartWineIcon, DoorIcon, FavoriteIcon } from '../common';
 import { apiRequest, refreshSession } from '../../lib/api';
 import { CART_UPDATED } from '../../lib/cart';
 import { FAVORITES_UPDATED } from '../../lib/favorites';
@@ -20,13 +20,16 @@ export function Header({ overlay = false }) {
     const [cartCount, setCartCount] = useState(0);
     const [favoritesCount, setFavoritesCount] = useState(0);
     const [wallet, setWallet] = useState(null);
+    const [user, setUser] = useState(null);
+    const returnPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const loginHref = window.location.pathname === '/login' ? '/login' : `/login?redirect=${encodeURIComponent(returnPath)}`;
 
     useEffect(() => {
         let active = true;
         refreshSession()
-            .then(() => Promise.all([apiRequest('/api/cart'), apiRequest('/api/favorites'), apiRequest('/api/wallet')]))
+            .then(({ user: sessionUser }) => { if (active) setUser(sessionUser); return Promise.all([apiRequest('/api/cart'), apiRequest('/api/favorites'), apiRequest('/api/wallet')]); })
             .then(([{ data: cart }, favorites, { data: walletData }]) => { if (active) { setCartCount(cart.items_count); setFavoritesCount(favorites.meta.total); setWallet(walletData); } })
-            .catch(() => { if (active) { setCartCount(0); setFavoritesCount(0); setWallet(null); } });
+            .catch(() => { if (active) { setCartCount(0); setFavoritesCount(0); setWallet(null); setUser(null); } });
         const updateCount = (event) => setCartCount(event.detail.itemsCount);
         const updateFavoritesCount = (event) => setFavoritesCount(event.detail.itemsCount);
         const updateWallet = (event) => setWallet(event.detail);
@@ -47,7 +50,7 @@ export function Header({ overlay = false }) {
                 <a href="/products">Products</a>
                 <a href="/posts">Journal</a>
                 <ShopActions className="global-desktop-shop-actions" cartCount={cartCount} favoritesCount={favoritesCount} wallet={wallet} />
-                <a className="global-account-link" href="/login">Member access <span>↗</span></a>
+                {user ? <a className="global-account-link" href="/profile">Profile <span>↗</span></a> : <a className="global-account-link global-login-link" href={loginHref}><DoorIcon /> Login</a>}
             </nav>
         </header>
     );

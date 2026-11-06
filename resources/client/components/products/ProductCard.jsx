@@ -14,7 +14,7 @@ function formatPrice(skus) {
     }).format(cheapest.price / 100);
 }
 
-export function ProductCard({ product, canManage = false, favoriteBusy = false, onEdit, onDelete, onToggleFavorite }) {
+export function ProductCard({ product, canManage = false, favoriteBusy = false, onEdit, onArchive, onToggleFavorite }) {
     const stock = product.skus.reduce((total, sku) => total + sku.stock_quantity, 0);
 
     return (
@@ -37,7 +37,7 @@ export function ProductCard({ product, canManage = false, favoriteBusy = false, 
                 <a href={`/products/${product.slug}`}>View details</a>
                 {canManage && <>
                     <Button variant="secondary" onClick={() => onEdit(product)}>Edit</Button>
-                    <Button variant="secondary" className="danger-button" onClick={() => onDelete(product)}>Delete</Button>
+                    {product.status !== 'archived' && <Button variant="secondary" className="danger-button" onClick={() => onArchive(product)}>Archive</Button>}
                 </>}
             </div>
         </article>

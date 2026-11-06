@@ -14,21 +14,21 @@ class ProductPolicy
 
     public function view(?User $user, Product $product): bool
     {
-        return $product->status === 'active' || $user?->isAdmin();
+        return $product->status === 'active' || $user?->canManageContent();
     }
 
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->canManageContent();
     }
 
     public function update(User $user, Product $product): bool
     {
-        return $user->isAdmin();
+        return $user->canManageContent();
     }
 
     public function delete(User $user, Product $product): bool
     {
-        return $user->isAdmin();
+        return $user->canManageContent();
     }
 }

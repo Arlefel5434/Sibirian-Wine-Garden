@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
+use App\Http\Requests\ProductFilterRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\ProductFilterService;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,17 +19,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ProductController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(ProductFilterRequest $request, ProductFilterService $filters): AnonymousResourceCollection
     {
         $user = $request->user('api');
         Gate::forUser($user)->authorize('viewAny', Product::class);
 
-        $products = Product::query()
+        $query = Product::query()
             ->with(['category', 'skus', 'attributeValues.attribute'])
             ->when($user, fn ($query) => $query->withExists(['favoritedBy as is_favorite' => fn ($favorites) => $favorites->where('users.id', $user->id)]))
-            ->when(! $user?->isAdmin(), fn ($query) => $query->where('status', 'active'))
-            ->latest()
-            ->paginate(15);
+            ->when(! $user?->canManageContent(), fn ($query) => $query->where('status', 'active'));
+
+        $products = $filters->apply($query, $request->validated(), $user?->canManageContent() === true)->paginate(15)->withQueryString();
 
         return ProductResource::collection($products);
     }
@@ -62,7 +64,7 @@ class ProductController extends Controller
     public function destroy(Product $product, ProductService $products): Response
     {
         Gate::authorize('delete', $product);
-        $products->delete($product);
+        $products->archive($product);
 
         return response()->noContent();
     }

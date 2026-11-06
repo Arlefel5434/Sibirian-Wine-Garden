@@ -23,12 +23,7 @@ class PostController extends Controller
 
         $posts = Post::query()
             ->with('author.profile')
-            ->when(! $user?->isAdmin(), function ($query) use ($user) {
-                $query->where(function ($query) use ($user) {
-                    $query->where('status', 'published')
-                        ->when($user, fn ($query) => $query->orWhereBelongsTo($user, 'author'));
-                });
-            })
+            ->when(! $user?->canManageContent(), fn ($query) => $query->where('status', 'published'))
             ->latest()
             ->paginate(9);
 

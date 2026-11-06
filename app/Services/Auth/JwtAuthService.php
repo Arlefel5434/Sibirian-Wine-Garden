@@ -17,6 +17,8 @@ class JwtAuthService
             throw new AuthenticationException('The provided credentials are incorrect.');
         }
 
+        $this->ensureActive($this->guard()->user());
+
         return $this->tokenResponse($token);
     }
 
@@ -28,11 +30,15 @@ class JwtAuthService
             throw new AuthenticationException;
         }
 
+        $this->ensureActive($user);
+
         return $user->loadMissing('profile');
     }
 
     public function tokenFor(User $user): array
     {
+        $this->ensureActive($user);
+
         return $this->tokenResponse($this->guard()->login($user));
     }
 
@@ -51,6 +57,13 @@ class JwtAuthService
             'token_type' => 'bearer',
             'expires_in' => $this->guard()->factory()->getTTL() * 60,
         ];
+    }
+
+    private function ensureActive(?User $user): void
+    {
+        if (! $user instanceof User || $user->isBanned()) {
+            throw new AuthenticationException('This account is blocked.');
+        }
     }
 
     private function guard(): JWTGuard

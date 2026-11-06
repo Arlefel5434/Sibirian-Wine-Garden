@@ -122,13 +122,17 @@ class MarketplaceSchemaTest extends TestCase
         ]);
     }
 
-    public function test_demo_seeding_creates_profiles_and_assigns_the_admin_role(): void
+    public function test_demo_seeding_creates_each_application_role(): void
     {
         $this->seed();
 
         $admin = User::where('email', 'alex@example.com')->firstOrFail();
+        $contentManager = User::where('email', 'content@example.com')->firstOrFail();
+        $customer = User::where('email', 'demo@example.com')->firstOrFail();
 
         $this->assertSame('admin', $admin->profile->role);
+        $this->assertSame('content_manager', $contentManager->profile->role);
+        $this->assertSame('customer', $customer->profile->role);
         $this->assertSame(User::count(), DB::table('profiles')->count());
     }
 

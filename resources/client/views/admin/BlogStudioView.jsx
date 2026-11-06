@@ -53,6 +53,7 @@ function BlogStudio() {
     const [errors, setErrors] = useState({});
     const [notice, setNotice] = useState('');
     const [saving, setSaving] = useState(false);
+    const canManageContent = ['admin', 'content_manager'].includes(user?.role);
 
     async function loadPosts(page = 1) {
         const payload = await apiRequest(`/api/posts?page=${page}`);
@@ -68,10 +69,13 @@ function BlogStudio() {
                 await loadPosts();
 
                 const editId = new URLSearchParams(window.location.search).get('edit');
+                const createRequested = new URLSearchParams(window.location.search).get('create') === '1';
 
                 if (editId && session?.user) {
                     const payload = await apiRequest(`/api/posts/${editId}`);
                     openEdit(payload.data);
+                } else if (createRequested && ['admin', 'content_manager'].includes(session?.user?.role)) {
+                    openCreate();
                 }
             })
             .finally(() => setLoading(false));
@@ -145,17 +149,17 @@ function BlogStudio() {
             <main className="studio-main">
                 <section className="page-heading">
                     <div><p className="kicker">Editorial desk</p><h1>Garden journal</h1><p>Shape field notes, harvest stories, and northern wine culture.</p></div>
-                    {user && <Button onClick={openCreate}>Create story</Button>}
+                    {canManageContent && <Button onClick={openCreate}>Create story</Button>}
                 </section>
 
                 <Notice className="notice" onClose={() => setNotice('')}>{notice}</Notice>
 
                 {posts.length ? (
                     <section className="posts-grid" aria-label="Journal posts">
-                        {posts.map((post) => <PostCard key={post.id} post={post} canManage={user && (user.role === 'admin' || user.id === post.author?.id)} onEdit={openEdit} onDelete={deletePost} />)}
+                        {posts.map((post) => <PostCard key={post.id} post={post} canManage={canManageContent} onEdit={openEdit} onDelete={deletePost} />)}
                     </section>
                 ) : (
-                    <section className="empty-state"><BrandMark className="studio-mark" /><h2>The journal is waiting.</h2><p>No published stories are available yet.</p>{user && <Button onClick={openCreate}>Write first story</Button>}</section>
+                    <section className="empty-state"><BrandMark className="studio-mark" /><h2>The journal is waiting.</h2><p>No published stories are available yet.</p>{canManageContent && <Button onClick={openCreate}>Write first story</Button>}</section>
                 )}
 
                 {meta?.last_page > 1 && <nav className="pagination" aria-label="Post pages">

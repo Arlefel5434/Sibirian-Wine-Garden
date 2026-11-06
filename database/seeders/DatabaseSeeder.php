@@ -23,6 +23,14 @@ class DatabaseSeeder extends Seeder
 
         $admin->profile->forceFill(['role' => 'admin'])->save();
 
+        $contentManager = User::factory()->create([
+            'name' => 'Demo Content Manager',
+            'email' => 'content@example.com',
+            'password' => bcrypt('password'),
+        ]);
+
+        $contentManager->profile->forceFill(['role' => 'content_manager'])->save();
+
         $demo = User::factory()->create([
             'name' => 'Demo Customer',
             'email' => 'demo@example.com',
@@ -32,7 +40,7 @@ class DatabaseSeeder extends Seeder
         app(WalletService::class)->adjust($demo, 'credit', 250000, $admin, 'Initial demonstration balance');
 
         Post::factory()->count(10)->create([
-            'user_id' => $admin->id,
+            'user_id' => $contentManager->id,
         ]);
 
         User::factory()

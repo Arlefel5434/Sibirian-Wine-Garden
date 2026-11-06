@@ -67,9 +67,13 @@ class ProductService
         });
     }
 
-    public function delete(Product $product): void
+    public function archive(Product $product): void
     {
-        $product->delete();
+        if ($product->status === 'archived') {
+            return;
+        }
+
+        $product->update(['status' => 'archived']);
     }
 
     private function uniqueSlug(string $name, ?Product $ignoredProduct = null): string
