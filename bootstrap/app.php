@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\EnsureUserIsNotBanned;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,7 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->alias(['not_banned' => EnsureUserIsNotBanned::class]);
+        $middleware->alias([
+            'email_verified' => EnsureEmailIsVerified::class,
+            'not_banned' => EnsureUserIsNotBanned::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
