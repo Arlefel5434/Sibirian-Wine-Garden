@@ -4,14 +4,48 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ResendEmailVerificationRequest;
 use App\Http\Resources\UserResource;
+use App\Models\User;
 use App\Services\Auth\JwtAuthService;
 use App\Services\Auth\RefreshTokenService;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
+    public function register(RegisterRequest $request): JsonResponse
+    {
+        $connection = User::query()->getModel()->getConnection();
+        $user = $connection->transaction(
+            fn (): User => User::query()->create($request->validated()),
+            3,
+        );
+
+        event(new Registered($user));
+
+        return response()->json([
+            'message' => 'Account created. Check your email and follow the confirmation link before signing in.',
+            'email' => $user->email,
+        ], Response::HTTP_CREATED);
+    }
+
+    public function resendVerification(ResendEmailVerificationRequest $request): JsonResponse
+    {
+        $user = User::query()->where('email', $request->validated('email'))->first();
+
+        if ($user && ! $user->hasVerifiedEmail()) {
+            $user->sendEmailVerificationNotification();
+        }
+
+        return response()->json([
+            'message' => 'If this address belongs to an unverified account, a new confirmation link has been sent.',
+        ]);
+    }
+
     public function login(
         LoginRequest $request,
         JwtAuthService $auth,

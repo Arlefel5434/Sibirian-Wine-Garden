@@ -25,6 +25,7 @@ function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [restoring, setRestoring] = useState(true);
     const [error, setError] = useState('');
+    const verified = new URLSearchParams(window.location.search).get('verified') === '1';
 
     useEffect(() => {
         refreshSession()
@@ -77,6 +78,7 @@ function LoginPage() {
                     <p className="form-intro">Sign in to continue to your account.</p>
 
                     <form onSubmit={handleSubmit} noValidate>
+                        {verified && <div className="success-message" role="status">Your email is confirmed. You can now sign in.</div>}
                         {error && <div className="error-message" role="alert">{error}</div>}
 
                         <label htmlFor="email">Email address</label>

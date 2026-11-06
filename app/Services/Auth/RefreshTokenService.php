@@ -62,6 +62,12 @@ class RefreshTokenService
                 return ['error' => 'This account is blocked.'];
             }
 
+            if (! $token->user->hasVerifiedEmail()) {
+                $this->revokeFamily($token->family_id);
+
+                return ['error' => 'Please confirm your email address before signing in.'];
+            }
+
             $token->update([
                 'last_used_at' => now(),
                 'revoked_at' => now(),

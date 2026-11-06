@@ -64,6 +64,10 @@ class JwtAuthService
         if (! $user instanceof User || $user->isBanned()) {
             throw new AuthenticationException('This account is blocked.');
         }
+
+        if (! $user->hasVerifiedEmail()) {
+            throw new AuthenticationException('Please confirm your email address before signing in.');
+        }
     }
 
     private function guard(): JWTGuard

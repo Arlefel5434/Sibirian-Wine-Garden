@@ -24,6 +24,10 @@ Route::get('home', HomeController::class)->name('api.home');
 Route::get('product-filters', ProductFilterOptionsController::class)->name('api.product-filters');
 
 Route::prefix('auth')->group(function () {
+    Route::post('register', [AuthController::class, 'register'])
+        ->middleware('throttle:3,1');
+    Route::post('email/verification-notification', [AuthController::class, 'resendVerification'])
+        ->middleware('throttle:3,1');
     Route::post('login', [AuthController::class, 'login'])
         ->middleware('throttle:6,1');
     Route::post('refresh', [AuthController::class, 'refresh'])
@@ -31,7 +35,7 @@ Route::prefix('auth')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
 
     Route::middleware('auth:api')->group(function () {
-        Route::get('me', [AuthController::class, 'me'])->middleware('not_banned');
+        Route::get('me', [AuthController::class, 'me'])->middleware(['not_banned', 'email_verified']);
     });
 });
 
@@ -40,7 +44,7 @@ Route::name('api.')->group(function () {
     Route::apiResource('products', ProductController::class)->only(['index', 'show']);
 });
 
-Route::middleware(['auth:api', 'not_banned'])->name('api.')->group(function () {
+Route::middleware(['auth:api', 'not_banned', 'email_verified'])->name('api.')->group(function () {
     Route::get('cart', CartController::class)->name('cart.show');
     Route::post('cart/items', [CartItemController::class, 'store'])->name('cart.items.store');
     Route::patch('cart/items/{cartItem}', [CartItemController::class, 'update'])->name('cart.items.update');

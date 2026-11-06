@@ -181,3 +181,23 @@ test('logout revokes the refresh token and clears its cookie', function () {
 test('refresh endpoint requires a refresh cookie', function () {
     $this->postJson('/api/auth/refresh')->assertUnauthorized();
 });
+
+test('email changes revoke the ability to refresh until the new address is confirmed', function () {
+    $user = User::factory()->create();
+    $login = $this->postJson('/api/auth/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+    $cookie = refreshCookieFrom($login);
+
+    $user->markEmailAsUnverified();
+    auth('api')->forgetUser();
+
+    $this
+        ->withCredentials()
+        ->withUnencryptedCookie($cookie->getName(), $cookie->getValue())
+        ->postJson('/api/auth/refresh')
+        ->assertUnauthorized();
+
+    expect(RefreshToken::query()->whereNull('revoked_at')->count())->toBe(0);
+});
