@@ -6,8 +6,16 @@ services:
         volumes:
             - ./:/var/www/html                 # Монтирует код с ПК
             - /var/www/html/public/build       # ВАЖНО: защищает скомпилированный Vite от затирания с ПК
+        environment:
+            CACHE_STORE: redis
+            REDIS_CLIENT: phpredis
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
         depends_on:
-            - db
+            db:
+                condition: service_started
+            redis:
+                condition: service_healthy
 
     nginx:
         image: nginx:latest
@@ -42,6 +50,20 @@ services:
         volumes:
             - pgdata:/var/lib/postgresql
 
+    redis:
+        image: redis:8-alpine
+        command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lfu
+        ports:
+            - "127.0.0.1:6380:6379"
+        volumes:
+            - redisdata:/data
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 5s
+            timeout: 3s
+            retries: 5
+
 volumes:
     pgdata:
     node_modules:
+    redisdata:

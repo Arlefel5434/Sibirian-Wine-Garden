@@ -34,6 +34,8 @@ RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
 # Установка расширений PHP
 RUN docker-php-ext-install pdo pdo_pgsql pgsql zip gd
 
+RUN pecl install redis-6.3.0 && docker-php-ext-enable redis
+
 # Копируем Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

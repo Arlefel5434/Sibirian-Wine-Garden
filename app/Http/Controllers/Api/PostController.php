@@ -7,27 +7,36 @@ use App\Http\Requests\Post\StorePostRequest;
 use App\Http\Requests\Post\UpdatePostRequest;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
+use App\Services\ContentCache;
 use App\Services\PostService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 class PostController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request, ContentCache $cache): JsonResponse
     {
         $user = $request->user('api');
         Gate::forUser($user)->authorize('viewAny', Post::class);
+        $canManage = $user?->canManageContent() === true;
+        $variant = 'index:'.$cache->fingerprint([
+            'page' => $request->integer('page', 1),
+            'scope' => $canManage ? 'manage' : 'public',
+        ]);
 
-        $posts = Post::query()
-            ->with(['author.profile', 'translations'])
-            ->when(! $user?->canManageContent(), fn ($query) => $query->where('status', 'published'))
-            ->latest()
-            ->paginate(9);
+        $payload = $cache->rememberPosts($variant, function () use ($canManage) {
+            $posts = Post::query()
+                ->with(['author.profile', 'translations'])
+                ->when(! $canManage, fn ($query) => $query->where('status', 'published'))
+                ->latest()
+                ->paginate(9);
 
-        return PostResource::collection($posts);
+            return PostResource::collection($posts)->response()->getData(true);
+        }, ! $canManage);
+
+        return response()->json($payload);
     }
 
     public function store(StorePostRequest $request, PostService $posts): JsonResponse
@@ -39,12 +48,18 @@ class PostController extends Controller
             ->setStatusCode(Response::HTTP_CREATED);
     }
 
-    public function show(Request $request, Post $post): PostResource
+    public function show(Request $request, Post $post, ContentCache $cache): JsonResponse
     {
         $user = $request->user('api');
         Gate::forUser($user)->authorize('view', $post);
+        $canManage = $user?->canManageContent() === true;
+        $payload = $cache->rememberPosts(
+            "show:{$post->id}",
+            fn () => PostResource::make($post->load(['author.profile', 'translations']))->response()->getData(true),
+            ! $canManage && $post->status === 'published',
+        );
 
-        return PostResource::make($post->load(['author.profile', 'translations']));
+        return response()->json($payload);
     }
 
     public function update(

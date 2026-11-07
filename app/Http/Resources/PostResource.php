@@ -23,7 +23,11 @@ class PostResource extends JsonResource
                 'preview_text' => $this->preview_text,
                 'body' => $this->body,
             ],
-            'author' => UserResource::make($this->whenLoaded('author')),
+            'author' => $this->whenLoaded('author', fn () => [
+                'id' => $this->author->id,
+                'name' => $this->author->name,
+                'avatar_url' => $this->author->profile?->avatar_path,
+            ]),
             'translations' => $this->whenLoaded('translations', fn () => $this->translations->map(fn ($translation) => [
                 'locale' => $translation->locale,
                 'title' => $translation->title,

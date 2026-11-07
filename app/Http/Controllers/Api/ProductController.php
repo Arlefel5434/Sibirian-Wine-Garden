@@ -9,29 +9,42 @@ use App\Http\Requests\ProductFilterRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\ContentCache;
 use App\Services\ProductFilterService;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 class ProductController extends Controller
 {
-    public function index(ProductFilterRequest $request, ProductFilterService $filters): AnonymousResourceCollection
-    {
+    public function index(
+        ProductFilterRequest $request,
+        ProductFilterService $filters,
+        ContentCache $cache,
+    ): JsonResponse {
         $user = $request->user('api');
         Gate::forUser($user)->authorize('viewAny', Product::class);
+        $validated = $this->normalizeFilters($request->validated());
+        $variant = 'index:'.$cache->fingerprint([
+            'filters' => $validated,
+        ]);
 
-        $query = Product::query()
-            ->with($this->relations())
-            ->when($user, fn ($query) => $query->withExists(['favoritedBy as is_favorite' => fn ($favorites) => $favorites->where('users.id', $user->id)]))
-            ->when(! $user?->canManageContent(), fn ($query) => $query->where('status', 'active'));
+        $payload = $cache->rememberProducts($variant, function () use ($filters, $user, $validated) {
+            $query = Product::query()
+                ->with($this->relations())
+                ->when($user, fn ($query) => $query->withExists(['favoritedBy as is_favorite' => fn ($favorites) => $favorites->where('users.id', $user->id)]))
+                ->when(! $user?->canManageContent(), fn ($query) => $query->where('status', 'active'));
 
-        $products = $filters->apply($query, $request->validated(), $user?->canManageContent() === true)->paginate(15)->withQueryString();
+            $products = $filters->apply($query, $validated, $user?->canManageContent() === true)
+                ->paginate(15)
+                ->appends($validated);
 
-        return ProductResource::collection($products);
+            return ProductResource::collection($products)->response()->getData(true);
+        }, $user === null && ! $request->filled('search'));
+
+        return response()->json($payload);
     }
 
     public function store(StoreProductRequest $request, ProductService $products): JsonResponse
@@ -43,12 +56,17 @@ class ProductController extends Controller
             ->setStatusCode(Response::HTTP_CREATED);
     }
 
-    public function show(Request $request, Product $product): ProductResource
+    public function show(Request $request, Product $product, ContentCache $cache): JsonResponse
     {
         $user = $request->user('api');
         Gate::forUser($user)->authorize('view', $product);
+        $payload = $cache->rememberProducts(
+            "show:{$product->id}",
+            fn () => ProductResource::make($this->loadRelations($product, $user))->response()->getData(true),
+            $user === null,
+        );
 
-        return ProductResource::make($this->loadRelations($product, $user));
+        return response()->json($payload);
     }
 
     public function update(
@@ -89,5 +107,28 @@ class ProductController extends Controller
             'attributeValues.translations',
             'attributeValues.attribute.translations',
         ];
+    }
+
+    private function normalizeFilters(array $filters): array
+    {
+        if (isset($filters['categories'])) {
+            sort($filters['categories'], SORT_NUMERIC);
+            $filters['categories'] = array_values($filters['categories']);
+        }
+
+        if (isset($filters['attributes'])) {
+            ksort($filters['attributes'], SORT_NATURAL);
+
+            foreach ($filters['attributes'] as &$values) {
+                sort($values, SORT_NATURAL | SORT_FLAG_CASE);
+                $values = array_values($values);
+            }
+
+            unset($values);
+        }
+
+        ksort($filters, SORT_NATURAL);
+
+        return $filters;
     }
 }
