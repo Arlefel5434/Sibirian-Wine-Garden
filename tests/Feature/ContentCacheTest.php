@@ -79,8 +79,7 @@ test('catalog rejects page numbers that can create unreasonable cache cardinalit
 });
 
 test('requests with an untrusted host are rejected before reaching shared cache', function () {
-    $this->withHeader('Host', 'attacker.example')
-        ->getJson('/api/products')
+    $this->getJson('http://attacker.example/api/products')
         ->assertBadRequest();
 });
 
