@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y \
 RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
 
 # Установка расширений PHP
-RUN docker-php-ext-install pdo pdo_pgsql pgsql zip gd
+RUN docker-php-ext-install pdo pdo_pgsql pgsql zip gd sockets pcntl
 
 RUN pecl install redis-6.3.0 && docker-php-ext-enable redis
 

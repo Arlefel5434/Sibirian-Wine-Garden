@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Cart;
 use App\Models\CartItem;
-use App\Models\Order;
 use App\Models\Sku;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -12,8 +11,6 @@ use Illuminate\Validation\ValidationException;
 
 class CartService
 {
-    public function __construct(private readonly ContentCache $cache) {}
-
     public function get(User $user): Cart
     {
         return $user->cart()->firstOrCreate()->load(['items.sku.translations', 'items.sku.product.translations']);
@@ -53,60 +50,6 @@ class CartService
         $item->delete();
 
         return $cart->load(['items.sku.translations', 'items.sku.product.translations']);
-    }
-
-    public function checkout(User $user, array $delivery): Order
-    {
-        $order = DB::transaction(function () use ($user, $delivery) {
-            $cart = Cart::query()->where('user_id', $user->id)->lockForUpdate()->first();
-
-            if (! $cart || ! $cart->items()->exists()) {
-                throw ValidationException::withMessages(['cart' => 'Your cart is empty.']);
-            }
-
-            $items = $cart->items()->orderBy('id')->get();
-            $skus = Sku::query()->with(['product.attributeValues.attribute'])->whereKey($items->pluck('sku_id'))->lockForUpdate()->get()->keyBy('id');
-            $currency = null;
-            $total = 0;
-
-            foreach ($items as $item) {
-                $sku = $skus->get($item->sku_id);
-                $this->ensureAvailable($sku, $item->quantity);
-                $currency ??= $sku->currency;
-
-                if ($currency !== $sku->currency) {
-                    throw ValidationException::withMessages(['cart' => 'All items must use the same currency.']);
-                }
-
-                $total += $sku->price * $item->quantity;
-            }
-
-            $order = $user->orders()->create(['status' => 'pending', 'total_amount' => $total, 'currency' => $currency, 'delivery_info' => $delivery]);
-
-            foreach ($items as $item) {
-                $sku = $skus->get($item->sku_id);
-                $order->items()->create([
-                    'sku_id' => $sku->id,
-                    'quantity' => $item->quantity,
-                    'price_at_purchase' => $sku->price,
-                    'product_name' => $sku->product->name,
-                    'sku_code' => $sku->sku,
-                    'variant_name' => $sku->name,
-                    'variant_attributes' => $sku->product->attributeValues->mapWithKeys(fn ($value) => [$value->attribute->name => $value->value])->all(),
-                    'currency' => $sku->currency,
-                    'quantity_unit' => $sku->quantity_unit,
-                ]);
-                $sku->decrement('stock_quantity', $item->quantity);
-            }
-
-            $cart->items()->delete();
-
-            return $order->load('items');
-        });
-
-        $this->cache->invalidateProducts();
-
-        return $order;
     }
 
     private function ownedItem(User $user, int $itemId): CartItem

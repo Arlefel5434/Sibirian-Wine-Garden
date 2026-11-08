@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Button, FormField, Input, PageLoader } from '../../components/common';
 import { PublicLayout } from '../../layouts/PublicLayout';
@@ -14,6 +14,7 @@ function CartView() {
     const [message, setMessage] = useState('');
     const [busy, setBusy] = useState(false);
     const [delivery, setDelivery] = useState({ recipient_name: '', country_code: '', city: '', postal_code: '', address_line: '' });
+    const checkoutKey = useRef(crypto.randomUUID());
 
     useEffect(() => { refreshSession().then(() => apiRequest('/api/cart')).then(({ data }) => setCart(data)).catch(() => window.location.assign('/login')); }, []);
     const changeDelivery = (event) => setDelivery((current) => ({ ...current, [event.target.name]: event.target.value }));
@@ -29,7 +30,7 @@ function CartView() {
 
     async function checkout(event) {
         event.preventDefault(); setBusy(true); setMessage('');
-        try { const { data } = await apiRequest('/api/checkout', { method: 'POST', body: JSON.stringify({ ...delivery, country_code: delivery.country_code.toUpperCase() }) }); window.location.assign(`/orders?created=${data.id}`); }
+        try { const { data } = await apiRequest('/api/checkout', { method: 'POST', body: JSON.stringify({ ...delivery, country_code: delivery.country_code.toUpperCase(), idempotency_key: checkoutKey.current }) }); window.location.assign(`/orders?created=${data.id}`); }
         catch (error) { setMessage(Object.values(error.errors || {})[0]?.[0] || error.message); setBusy(false); }
     }
 
