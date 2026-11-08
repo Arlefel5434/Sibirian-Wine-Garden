@@ -14,6 +14,7 @@ class CheckoutRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'idempotency_key' => ['required', 'uuid'],
             'recipient_name' => ['required', 'string', 'max:120'],
             'country_code' => ['required', 'string', 'size:2', 'alpha'],
             'city' => ['required', 'string', 'max:120'],

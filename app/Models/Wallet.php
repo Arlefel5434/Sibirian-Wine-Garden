@@ -24,4 +24,18 @@ class Wallet extends Model
     {
         return $this->hasMany(WalletTransaction::class);
     }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(WalletReservation::class);
+    }
+
+    public function availableBalance(): int
+    {
+        $reserved = $this->relationLoaded('reservations')
+            ? $this->reservations->where('status', 'reserved')->sum('amount')
+            : $this->reservations()->where('status', 'reserved')->sum('amount');
+
+        return max(0, $this->balance - $reserved);
+    }
 }

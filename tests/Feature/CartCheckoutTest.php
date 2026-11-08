@@ -2,6 +2,7 @@
 
 use App\Models\Product;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 function cartProduct(int $stock = 5, int $price = 3499): array
 {
@@ -95,7 +96,7 @@ test('cart rejects quantities above current stock', function () {
 test('checkout rejects an empty cart', function () {
     $token = auth('api')->login(User::factory()->create());
 
-    $this->withToken($token)->postJson('/api/checkout', ['recipient_name' => 'Test Customer', 'country_code' => 'DE', 'city' => 'Berlin', 'postal_code' => '10115', 'address_line' => 'Garden street 1'])
+    $this->withToken($token)->postJson('/api/checkout', ['idempotency_key' => (string) Str::uuid(), 'recipient_name' => 'Test Customer', 'country_code' => 'DE', 'city' => 'Berlin', 'postal_code' => '10115', 'address_line' => 'Garden street 1'])
         ->assertUnprocessable()
         ->assertJsonValidationErrors('cart');
 });
@@ -103,10 +104,11 @@ test('checkout rejects an empty cart', function () {
 test('checkout uses database prices and atomically creates order snapshots', function () {
     [$product, $sku] = cartProduct(stock: 5, price: 3499);
     $user = User::factory()->create();
+    $user->wallet->update(['balance' => 10000]);
     $token = auth('api')->login($user);
     $this->withToken($token)->postJson('/api/cart/items', ['sku_id' => $sku->id, 'quantity' => 2, 'price' => 1]);
 
-    $this->withToken($token)->postJson('/api/checkout', ['recipient_name' => 'Test Customer', 'country_code' => 'DE', 'city' => 'Berlin', 'postal_code' => '10115', 'address_line' => 'Garden street 1'])
+    $this->withToken($token)->postJson('/api/checkout', ['idempotency_key' => (string) Str::uuid(), 'recipient_name' => 'Test Customer', 'country_code' => 'DE', 'city' => 'Berlin', 'postal_code' => '10115', 'address_line' => 'Garden street 1'])
         ->assertCreated()
         ->assertJsonPath('data.total_amount', 6998)
         ->assertJsonPath('data.items.0.product_name', $product->name)
@@ -114,5 +116,6 @@ test('checkout uses database prices and atomically creates order snapshots', fun
 
     expect($sku->refresh()->stock_quantity)->toBe(3)
         ->and($user->cart->items()->count())->toBe(0)
-        ->and($user->orders()->count())->toBe(1);
+        ->and($user->orders()->count())->toBe(1)
+        ->and($user->wallet->reservations()->where('status', 'reserved')->count())->toBe(1);
 });

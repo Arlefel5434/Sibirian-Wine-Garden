@@ -1,5 +1,7 @@
 <?php
 
+use App\Queue\ConfirmedRabbitMQQueue;
+
 return [
 
     /*
@@ -70,6 +72,35 @@ return [
             'queue' => env('REDIS_QUEUE', 'default'),
             'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 90),
             'block_for' => null,
+            'after_commit' => false,
+        ],
+
+        'rabbitmq' => [
+            'driver' => 'rabbitmq',
+            'queue' => env('RABBITMQ_QUEUE', 'orders.process'),
+            'hosts' => [
+                [
+                    'host' => env('RABBITMQ_HOST', '127.0.0.1'),
+                    'port' => (int) env('RABBITMQ_PORT', 5672),
+                    'user' => env('RABBITMQ_USER', 'wine'),
+                    'password' => env('RABBITMQ_PASSWORD'),
+                    'vhost' => env('RABBITMQ_VHOST', '/'),
+                ],
+            ],
+            'options' => [
+                'heartbeat' => (int) env('RABBITMQ_HEARTBEAT', 30),
+                'connection_timeout' => (float) env('RABBITMQ_CONNECTION_TIMEOUT', 3),
+                'read_timeout' => (float) env('RABBITMQ_READ_TIMEOUT', 5),
+                'write_timeout' => (float) env('RABBITMQ_WRITE_TIMEOUT', 5),
+                'channel_rpc_timeout' => (float) env('RABBITMQ_CHANNEL_RPC_TIMEOUT', 5),
+                'queue' => [
+                    'reroute_failed' => true,
+                    'failed_routing_key' => '%s.failed',
+                    'quorum' => true,
+                ],
+            ],
+            'worker' => ConfirmedRabbitMQQueue::class,
+            'publisher_confirm_timeout' => (float) env('RABBITMQ_PUBLISHER_CONFIRM_TIMEOUT', 5),
             'after_commit' => false,
         ],
 

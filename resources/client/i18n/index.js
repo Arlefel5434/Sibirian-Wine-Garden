@@ -72,6 +72,7 @@ const dictionaries = {
         'Back to profile →': 'Вернуться в профиль →', 'No orders yet.': 'Заказов пока нет.', 'Paying…': 'Оплата…',
         'Pay from wallet': 'Оплатить из кошелька', 'Opening…': 'Открываем…', 'Use test gateway': 'Тестовая оплата',
         'Continue test payment →': 'Продолжить тестовую оплату →', 'Order': 'Заказ', 'was paid successfully.': 'успешно оплачен.',
+        'Order is being processed…': 'Заказ обрабатывается…',
         'Opening your wallet…': 'Открываем кошелёк…', 'Internal balance': 'Внутренний баланс', 'Your wallet': 'Ваш кошелёк',
         'Every balance change is recorded in an immutable ledger.': 'Каждое изменение баланса записывается в неизменяемый журнал.',
         'View orders →': 'Смотреть заказы →', 'Available balance': 'Доступный баланс', 'Transaction history': 'История операций',

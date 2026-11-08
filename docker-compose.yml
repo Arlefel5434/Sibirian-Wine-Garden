@@ -63,7 +63,145 @@ services:
             timeout: 3s
             retries: 5
 
+    rabbitmq:
+        image: rabbitmq:4.4.0-management-alpine
+        environment:
+            RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-wine}
+            RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set}
+        ports:
+            - "127.0.0.1:5673:5672"
+            - "127.0.0.1:15672:15672"
+        volumes:
+            - rabbitmqdata:/var/lib/rabbitmq
+        healthcheck:
+            test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+            interval: 5s
+            timeout: 5s
+            retries: 12
+
+    rabbitmq-setup:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: php artisan rabbitmq:setup
+        volumes:
+            - ./:/var/www/html
+        environment:
+            RABBITMQ_HOST: rabbitmq
+            RABBITMQ_PORT: 5672
+            RABBITMQ_USER: ${RABBITMQ_USER:-wine}
+            RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set}
+            RABBITMQ_VHOST: /
+        depends_on:
+            rabbitmq:
+                condition: service_healthy
+
+    order-worker:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: php artisan rabbitmq:consume rabbitmq --queue=orders.process --prefetch-count=1 --sleep=1 --tries=3 --timeout=30 --max-time=3600
+        restart: unless-stopped
+        volumes:
+            - ./:/var/www/html
+        environment:
+            CACHE_STORE: redis
+            REDIS_CLIENT: phpredis
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            RABBITMQ_HOST: rabbitmq
+            RABBITMQ_PORT: 5672
+            RABBITMQ_USER: ${RABBITMQ_USER:-wine}
+            RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set}
+            RABBITMQ_VHOST: /
+        depends_on:
+            rabbitmq-setup:
+                condition: service_completed_successfully
+            db:
+                condition: service_started
+            redis:
+                condition: service_healthy
+
+    email-worker:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: php artisan rabbitmq:consume rabbitmq --queue=notifications.email --prefetch-count=1 --sleep=1 --tries=5 --timeout=30 --max-time=3600
+        restart: unless-stopped
+        volumes:
+            - ./:/var/www/html
+        environment:
+            CACHE_STORE: redis
+            REDIS_CLIENT: phpredis
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            RABBITMQ_HOST: rabbitmq
+            RABBITMQ_PORT: 5672
+            RABBITMQ_USER: ${RABBITMQ_USER:-wine}
+            RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set}
+            RABBITMQ_VHOST: /
+        depends_on:
+            rabbitmq-setup:
+                condition: service_completed_successfully
+            db:
+                condition: service_started
+            redis:
+                condition: service_healthy
+
+    delivery-worker:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: php artisan rabbitmq:consume rabbitmq --queue=delivery.submit --prefetch-count=1 --sleep=1 --tries=5 --timeout=30 --max-time=3600
+        restart: unless-stopped
+        volumes:
+            - ./:/var/www/html
+        environment:
+            CACHE_STORE: redis
+            REDIS_CLIENT: phpredis
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            RABBITMQ_HOST: rabbitmq
+            RABBITMQ_PORT: 5672
+            RABBITMQ_USER: ${RABBITMQ_USER:-wine}
+            RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set}
+            RABBITMQ_VHOST: /
+        depends_on:
+            rabbitmq-setup:
+                condition: service_completed_successfully
+            db:
+                condition: service_started
+            redis:
+                condition: service_healthy
+
+    outbox-publisher:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: sh -c "while true; do php artisan outbox:publish --limit=100 || true; sleep 1; done"
+        restart: unless-stopped
+        volumes:
+            - ./:/var/www/html
+        environment:
+            CACHE_STORE: redis
+            REDIS_CLIENT: phpredis
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            RABBITMQ_HOST: rabbitmq
+            RABBITMQ_PORT: 5672
+            RABBITMQ_USER: ${RABBITMQ_USER:-wine}
+            RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set}
+            RABBITMQ_VHOST: /
+        depends_on:
+            rabbitmq-setup:
+                condition: service_completed_successfully
+            db:
+                condition: service_started
+            redis:
+                condition: service_healthy
+
 volumes:
     pgdata:
     node_modules:
     redisdata:
+    rabbitmqdata:

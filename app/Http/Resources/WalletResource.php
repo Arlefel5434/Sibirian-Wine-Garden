@@ -12,7 +12,9 @@ class WalletResource extends JsonResource
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
-            'balance' => $this->balance,
+            'balance' => $this->availableBalance(),
+            'ledger_balance' => $this->balance,
+            'reserved_balance' => $this->balance - $this->availableBalance(),
             'currency' => $this->currency,
             'transactions' => $this->whenLoaded('transactions', fn () => $this->transactions->map(fn ($transaction) => [
                 'id' => $transaction->id,
