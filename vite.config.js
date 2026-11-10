@@ -13,7 +13,6 @@ export default defineConfig({
                 'resources/css/post.css',
                 'resources/css/products.css',
                 'resources/css/cart.css',
-                'resources/js/app.js',
                 'resources/client/views/home/HomeView.jsx',
                 'resources/client/views/profile/ProfileView.jsx',
                 'resources/client/views/cart/CartView.jsx',

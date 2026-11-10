@@ -1,58 +1,257 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Siberian Wine Garden
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/images/union-logo.svg" width="180" alt="Siberian Wine Garden">
 </p>
 
-## About Laravel
+<p align="center">
+  <a href="https://github.com/Arlefel5434/Sibirian-Wine-Garden/actions/workflows/ci.yml"><img src="https://github.com/Arlefel5434/Sibirian-Wine-Garden/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/PHP-8.5-777BB4" alt="PHP 8.5">
+  <img src="https://img.shields.io/badge/Laravel-13-FF2D20" alt="Laravel 13">
+  <img src="https://img.shields.io/badge/React-19-61DAFB" alt="React 19">
+  <img src="https://img.shields.io/badge/PostgreSQL-18-4169E1" alt="PostgreSQL 18">
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Siberian Wine Garden — демонстрационный интернет-магазин вина, винограда и сопутствующей продукции. Проект создан в ознакомительных целях и показывает организацию современного Laravel-приложения: JWT-аутентификацию, ролевую модель, каталог, блог, корзину, избранное, внутренний кошелёк и асинхронную обработку заказов.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Проект не является действующим магазином. Платежи, доставка, баланс и пользовательские данные используются только для локальной демонстрации и тестирования.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Возможности
 
-## Learning Laravel
+- публичный каталог с фильтрацией и локализацией на английский и русский языки;
+- блог с управлением публикациями;
+- JWT access token и защищённый refresh token;
+- роли администратора, контент-менеджера и покупателя;
+- корзина, избранное и оформление заказа;
+- внутренний кошелёк и демонстрационный платёжный слой;
+- архивирование товаров вместо физического удаления;
+- Redis-кеш с версионированной инвалидацией и защитой от cache stampede;
+- PostgreSQL transactional outbox;
+- RabbitMQ для обработки заказа, уведомления и передачи в доставку;
+- React-интерфейс с общими компонентами и layout;
+- feature-тесты, Laravel Pint и GitHub Actions CI.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Технологии
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Область | Технология |
+|---|---|
+| Backend | PHP 8.5, Laravel 13 |
+| Frontend | React 19, Vite 8 |
+| Database | PostgreSQL 18 |
+| Cache | Redis 8 |
+| Broker | RabbitMQ 4.4 |
+| Authentication | JWT + refresh token в HttpOnly cookie |
+| Tests | Pest 4, PHPUnit 12 |
+| Infrastructure | Docker Compose, Nginx, PHP-FPM |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Требования
 
-## Agentic Development
+Для стандартной установки нужны только:
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+- Git;
+- Docker Engine или Docker Desktop;
+- Docker Compose v2.
+
+Локально устанавливать PHP, Composer, PostgreSQL, Redis, RabbitMQ или Node.js не требуется — они запускаются в контейнерах.
+
+Рекомендуется выделить Docker не менее 4 ГБ оперативной памяти. Первый запуск занимает больше времени, поскольку собирает PHP-образ и загружает зависимости.
+
+## Установка
+
+### 1. Клонирование
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/Arlefel5434/Sibirian-Wine-Garden.git
+cd Sibirian-Wine-Garden
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Создание локального окружения
 
-## Contributing
+Linux и macOS:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+cp .env.example .env
+```
 
-## Code of Conduct
+Windows PowerShell:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```powershell
+Copy-Item .env.example .env
+```
 
-## Security Vulnerabilities
+`.env.example` уже содержит адреса и безопасные демонстрационные значения для Docker. Перед запуском можно поменять `DB_PASSWORD` и `RABBITMQ_PASSWORD`. Файл `.env` локальный и не должен попадать в Git.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 3. Сборка базового образа
 
-## License
+```bash
+docker compose build app
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 4. Установка PHP-зависимостей
+
+```bash
+docker compose run --rm --no-deps app composer install
+```
+
+### 5. Генерация ключей
+
+```bash
+docker compose run --rm --no-deps app php artisan key:generate
+docker compose run --rm --no-deps app php artisan jwt:secret
+```
+
+Команды автоматически запишут случайные `APP_KEY` и `JWT_SECRET` в локальный `.env`. Не копируйте демонстрационные или production-ключи между установками.
+
+### 6. Запуск приложения
+
+```bash
+docker compose up -d --build
+```
+
+Команда запускает Nginx, PHP-FPM, Vite, PostgreSQL, Redis, RabbitMQ, настройку очередей, outbox publisher и изолированные обработчики заказов, почты и доставки.
+
+### 7. Создание и заполнение базы данных
+
+```bash
+docker compose exec app php artisan migrate --seed
+```
+
+Сидер создаст категории, товары, характеристики, переводы, записи блога и демонстрационных пользователей. После первой миграции перезапустите фоновые процессы, если они успели стартовать раньше таблиц:
+
+```bash
+docker compose restart rabbitmq-setup order-worker email-worker delivery-worker outbox-publisher
+```
+
+### 8. Открытие проекта
+
+- приложение: [http://localhost:8888](http://localhost:8888);
+- Vite dev server: [http://localhost:5180](http://localhost:5180);
+- RabbitMQ Management: [http://localhost:15672](http://localhost:15672);
+- PostgreSQL с хоста: `localhost:5439`;
+- Redis с хоста: `localhost:6380`.
+
+Для входа в RabbitMQ Management используйте значения `RABBITMQ_USER` и `RABBITMQ_PASSWORD` из своего `.env`.
+
+## Демонстрационные пользователи
+
+После `php artisan migrate --seed` доступны:
+
+| Роль | Email | Пароль | Назначение |
+|---|---|---|---|
+| Администратор | `alex@example.com` | `password` | пользователи, роли, блокировки, заказы |
+| Контент-менеджер | `content@example.com` | `password` | товары и публикации |
+| Покупатель | `demo@example.com` | `password` | корзина, избранное, заказы и тестовый баланс |
+
+Эти данные предназначены исключительно для локальной разработки. Не используйте их в публичном окружении.
+
+## Основные переменные окружения
+
+| Переменная | Назначение | Локальное значение |
+|---|---|---|
+| `APP_URL` | основной URL приложения и ссылки в письмах | `http://localhost:8888` |
+| `APP_KEY` | шифрование данных Laravel | генерируется командой |
+| `JWT_SECRET` | подпись JWT | генерируется командой |
+| `DB_HOST` | PostgreSQL внутри Docker | `db` |
+| `DB_PORT` | внутренний порт PostgreSQL | `5432` |
+| `REDIS_HOST` | Redis внутри Docker | `redis` |
+| `RABBITMQ_HOST` | RabbitMQ внутри Docker | `rabbitmq` |
+| `MAIL_MAILER` | способ отправки писем | `log` |
+| `CONTENT_CACHE_ENABLED` | кеширование публичного контента | `true` |
+
+При `MAIL_MAILER=log` подтверждение регистрации не отправляется наружу. Текст письма и ссылка появляются в `storage/logs/laravel.log`:
+
+```bash
+docker compose exec app php artisan pail
+```
+
+## Полезные команды
+
+Показать состояние контейнеров:
+
+```bash
+docker compose ps
+```
+
+Посмотреть логи:
+
+```bash
+docker compose logs -f app nginx
+```
+
+Остановить приложение без удаления данных:
+
+```bash
+docker compose down
+```
+
+Полностью пересоздать локальную базу и демонстрационные данные:
+
+```bash
+docker compose exec app php artisan migrate:fresh --seed
+```
+
+Команда `migrate:fresh` удаляет все локальные таблицы и данные.
+
+Очистить Laravel-кеши:
+
+```bash
+docker compose exec app php artisan optimize:clear
+```
+
+## Проверка качества
+
+Полный набор backend-тестов:
+
+```bash
+docker compose exec app php artisan test
+```
+
+Проверка форматирования без изменения файлов:
+
+```bash
+docker compose exec app ./vendor/bin/pint --test
+```
+
+Автоматическое форматирование:
+
+```bash
+docker compose exec app ./vendor/bin/pint
+```
+
+Production-сборка frontend:
+
+```bash
+docker compose exec frontend npm run build
+```
+
+Аудит зависимостей:
+
+```bash
+docker compose exec app composer audit --locked
+docker compose exec frontend npm audit
+```
+
+## Архитектура заказа
+
+Оформление заказа не зависит от доступности RabbitMQ в момент HTTP-запроса:
+
+1. Laravel блокирует необходимые строки PostgreSQL и проверяет остатки и доступный баланс.
+2. Заказ, резерв товара, резерв кошелька и outbox-сообщение записываются одной транзакцией.
+3. Клиент сразу получает созданный заказ со статусом обработки.
+4. Outbox publisher надёжно публикует событие в RabbitMQ.
+5. Независимые consumers списывают средства, отправляют уведомление и создают заявку на доставку.
+6. Повторная доставка сообщения безопасна благодаря idempotency и таблице обработанных сообщений.
+
+Если RabbitMQ временно недоступен, заказ и событие остаются в PostgreSQL и будут обработаны после восстановления брокера.
+
+## Ограничения демонстрационной версии
+
+- реальная платёжная система не подключена;
+- доставка реализована как локальный mock provider;
+- письма по умолчанию записываются в лог;
+- Docker-конфигурация предназначена для разработки, а не для production;
+- локальные пароли из `.env.example` нельзя использовать на публичном сервере.
+
+## Лицензия и использование
+
+Репозиторий предназначен для ознакомления с архитектурой и демонстрации навыков разработки. Перед повторным использованием кода проверьте условия лицензирования зависимостей и замените все локальные настройки безопасности на значения своего окружения.

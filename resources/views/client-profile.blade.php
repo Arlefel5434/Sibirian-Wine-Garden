@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Your account · Siberian Wine Garden</title>
-        <x-favicon />
-        @viteReactRefresh
-        @vite(['resources/css/app.css', 'resources/client/views/profile/ProfileView.jsx'])
-    </head>
-    <body><div id="profile-root"></div></body>
-</html>
+@extends('layouts.react', [
+    'title' => 'Your account · Siberian Wine Garden',
+    'assets' => ['resources/css/app.css', 'resources/client/views/profile/ProfileView.jsx'],
+])
+
+@section('content')
+    <div id="profile-root"></div>
+@endsection
