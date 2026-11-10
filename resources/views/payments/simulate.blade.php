@@ -1,2 +1,8 @@
-<!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><x-favicon /><title>Test payment · Siberian Wine Garden</title>@viteReactRefresh @vite(['resources/css/cart.css', 'resources/client/views/payments/PaymentSimulationView.jsx'])</head><body><div id="payment-simulation-root" data-payment-id="{{ $payment }}"></div></body></html>
+@extends('layouts.react', [
+    'title' => 'Test payment · Siberian Wine Garden',
+    'assets' => ['resources/css/cart.css', 'resources/client/views/payments/PaymentSimulationView.jsx'],
+])
+
+@section('content')
+    <div id="payment-simulation-root" data-payment-id="{{ $payment }}"></div>
+@endsection

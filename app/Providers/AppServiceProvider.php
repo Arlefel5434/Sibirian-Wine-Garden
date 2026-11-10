@@ -18,11 +18,21 @@ use App\Models\SkuTranslation;
 use App\Models\User;
 use App\Observers\InvalidatePostCache;
 use App\Observers\InvalidateProductCache;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        $config = $this->app->make(Repository::class);
+
+        $config->set('auth.guards', [
+            'api' => $config->get('auth.guards.api'),
+        ]);
+        $config->set('auth.passwords', []);
+        $config->set('auth.password_timeout', null);
+    }
 
     public function boot(): void
     {

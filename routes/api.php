@@ -21,51 +21,71 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('home', HomeController::class)->name('api.home');
-Route::get('locales', LocaleController::class)->name('api.locales');
-Route::get('product-filters', ProductFilterOptionsController::class)->name('api.product-filters');
-
-Route::prefix('auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register'])
-        ->middleware('throttle:3,1');
-    Route::post('email/verification-notification', [AuthController::class, 'resendVerification'])
-        ->middleware('throttle:3,1');
-    Route::post('login', [AuthController::class, 'login'])
-        ->middleware('throttle:6,1');
-    Route::post('refresh', [AuthController::class, 'refresh'])
-        ->middleware('throttle:30,1');
-    Route::post('logout', [AuthController::class, 'logout']);
-
-    Route::middleware('auth:api')->group(function () {
-        Route::get('me', [AuthController::class, 'me'])->middleware(['not_banned', 'email_verified']);
-    });
-});
-
 Route::name('api.')->group(function () {
+    Route::get('home', HomeController::class)->name('home');
+    Route::get('locales', LocaleController::class)->name('locales');
+    Route::get('product-filters', ProductFilterOptionsController::class)->name('product-filters');
+
+    Route::prefix('auth')->name('auth.')->group(function () {
+        Route::post('register', [AuthController::class, 'register'])
+            ->middleware('throttle:3,1')
+            ->name('register');
+        Route::post('email/verification-notification', [AuthController::class, 'resendVerification'])
+            ->middleware('throttle:3,1')
+            ->name('verification.resend');
+        Route::post('login', [AuthController::class, 'login'])
+            ->middleware('throttle:6,1')
+            ->name('login');
+        Route::post('refresh', [AuthController::class, 'refresh'])
+            ->middleware('throttle:30,1')
+            ->name('refresh');
+        Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+        Route::get('me', [AuthController::class, 'me'])
+            ->middleware(['auth:api', 'not_banned', 'email_verified'])
+            ->name('me');
+    });
+
     Route::apiResource('posts', PostController::class)->only(['index', 'show']);
     Route::apiResource('products', ProductController::class)->only(['index', 'show']);
-});
 
-Route::middleware(['auth:api', 'not_banned', 'email_verified'])->name('api.')->group(function () {
-    Route::get('cart', CartController::class)->name('cart.show');
-    Route::post('cart/items', [CartItemController::class, 'store'])->name('cart.items.store');
-    Route::patch('cart/items/{cartItem}', [CartItemController::class, 'update'])->name('cart.items.update');
-    Route::delete('cart/items/{cartItem}', [CartItemController::class, 'destroy'])->name('cart.items.destroy');
-    Route::post('checkout', CheckoutController::class)->middleware('throttle:10,1')->name('checkout');
-    Route::get('orders', OrderController::class)->name('orders.index');
-    Route::post('orders/{order}/payments', [PaymentController::class, 'store'])->name('payments.store');
-    Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
-    Route::post('payments/{payment}/simulate', PaymentSimulationController::class)->name('payments.simulate.store');
-    Route::get('wallet', WalletController::class)->name('wallet.show');
-    Route::post('admin/users/{user}/wallet/adjustments', AdminWalletAdjustmentController::class)->name('admin.wallet.adjustments.store');
-    Route::get('admin/orders', AdminOrderController::class)->name('admin.orders.index');
-    Route::get('admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
-    Route::patch('admin/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
-    Route::get('favorites', [FavoriteController::class, 'index'])->name('favorites.index');
-    Route::post('favorites/{product}', [FavoriteController::class, 'store'])->name('favorites.store');
-    Route::delete('favorites/{product}', [FavoriteController::class, 'destroy'])->name('favorites.destroy');
-    Route::patch('profile', ProfileController::class)->name('profile.update');
-    Route::apiResource('posts', PostController::class)->except(['index', 'show']);
-    Route::get('product-options', ProductOptionsController::class)->name('product-options');
-    Route::apiResource('products', ProductController::class)->except(['index', 'show']);
+    Route::middleware(['auth:api', 'not_banned', 'email_verified'])->group(function () {
+        Route::prefix('cart')->name('cart.')->group(function () {
+            Route::get('/', CartController::class)->name('show');
+            Route::post('items', [CartItemController::class, 'store'])->name('items.store');
+            Route::patch('items/{cartItem}', [CartItemController::class, 'update'])->name('items.update');
+            Route::delete('items/{cartItem}', [CartItemController::class, 'destroy'])->name('items.destroy');
+        });
+
+        Route::post('checkout', CheckoutController::class)
+            ->middleware('throttle:10,1')
+            ->name('checkout');
+        Route::get('orders', OrderController::class)->name('orders.index');
+        Route::post('orders/{order}/payments', [PaymentController::class, 'store'])->name('payments.store');
+
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('{payment}', [PaymentController::class, 'show'])->name('show');
+            Route::post('{payment}/simulate', PaymentSimulationController::class)->name('simulate.store');
+        });
+
+        Route::get('wallet', WalletController::class)->name('wallet.show');
+
+        Route::prefix('admin')->name('admin.')->group(function () {
+            Route::get('orders', AdminOrderController::class)->name('orders.index');
+            Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+            Route::patch('users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+            Route::post('users/{user}/wallet/adjustments', AdminWalletAdjustmentController::class)
+                ->name('wallet.adjustments.store');
+        });
+
+        Route::prefix('favorites')->name('favorites.')->group(function () {
+            Route::get('/', [FavoriteController::class, 'index'])->name('index');
+            Route::post('{product}', [FavoriteController::class, 'store'])->name('store');
+            Route::delete('{product}', [FavoriteController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::patch('profile', ProfileController::class)->name('profile.update');
+        Route::apiResource('posts', PostController::class)->except(['index', 'show']);
+        Route::get('product-options', ProductOptionsController::class)->name('product-options');
+        Route::apiResource('products', ProductController::class)->except(['index', 'show']);
+    });
 });

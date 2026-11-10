@@ -19,7 +19,6 @@ class PostController extends Controller
     public function index(Request $request, ContentCache $cache): JsonResponse
     {
         $user = $request->user('api');
-        Gate::forUser($user)->authorize('viewAny', Post::class);
         $canManage = $user?->canManageContent() === true;
         $variant = 'index:'.$cache->fingerprint([
             'page' => $request->integer('page', 1),

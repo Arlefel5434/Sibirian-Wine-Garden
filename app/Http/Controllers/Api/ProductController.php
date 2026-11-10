@@ -25,7 +25,6 @@ class ProductController extends Controller
         ContentCache $cache,
     ): JsonResponse {
         $user = $request->user('api');
-        Gate::forUser($user)->authorize('viewAny', Product::class);
         $validated = $this->normalizeFilters($request->validated());
         $variant = 'index:'.$cache->fingerprint([
             'filters' => $validated,
